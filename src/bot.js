@@ -5,7 +5,6 @@ module.exports.setup = function(app) {
   var teams = require('botbuilder-teams');
   var config = require('config');
   var botConfig = config.get('bot');
-  // var BOT_APP_ID = process.env.MICROSOFT_APP_ID || botConfig.microsoftAppId;
 
   // Write to excel
   var excel = require('excel4node'); // Require library
@@ -33,23 +32,50 @@ module.exports.setup = function(app) {
     "SSN": {
       // Dialog q2
       item: "q2"
+    },
+    "Stock": {
+      // Dialog q3
+      item: "q3"
+    },
+    "Quoted price": {
+      // Dialog q4
+      item: "q4"
+    },
+    "Number of stocks": {
+      // Dialog q5
+      item: "q5"
     }
   };
 
   // The variables used to store information about the user.
   var name = "";
   var ssn = "";
+  var stock = "";
+  var quotedPrice = "";
+  var numStocks = "";
 
   // Create the bot.
   var bot = new builder.UniversalBot(connector, [
     function(session) {
       // Begin dialog.
-      session.send("Welcome, here you can register your stocks!");
+      session.send("Welcome! Here you can register your transactions.");
       session.beginDialog("q1");
     },
     function(session, results) {
       // Begin dialog.
       session.beginDialog("q2");
+    },
+    function(session, results) {
+      // Begin dialog.
+      session.beginDialog("q3");
+    },
+    function(session, results) {
+      // Begin dialog.
+      session.beginDialog("q4");
+    },
+    function(session, results) {
+      // Begin dialog.
+      session.beginDialog("q5");
     },
     function(session, results) {
       // Begin confirmation dialog.
@@ -61,23 +87,27 @@ module.exports.setup = function(app) {
   bot.dialog("conf", [
     function(session) {
       // Print current variables.
-      var msg = "Name: " + name + "\n SSN:  " + ssn;
+      var msg = "Name: " + name + "\n SSN:  " + ssn + "\n Stock: " + stock + "\n Quoted Price: " + quotedPrice + "\n Number of stocks: " + numStocks + "\n Transaction value: " + quotedPrice*numStocks;
       session.send(msg);
-      builder.Prompts.confirm(session, "Is this the correct input? Please answer yes/no?");
+      builder.Prompts.confirm(session, "Is this the correct input? Please answer yes/no.");
     },
     function(session, args) {
       // If correct input.
       if (args.response) {
         worksheet.cell(row,1).string(name);
         worksheet.cell(row,2).string(ssn);
+        worksheet.cell(row,3).string(stock);
+        worksheet.cell(row,4).string(quotedPrice);
+        worksheet.cell(row,5).string(numStocks);
+        worksheet.cell(row,6).number(quotedPrice*numStocks);
         // Write to excel
         workbook.write("test.xlsx", function(err) {
             if(err) {
-                session.send("Could not save to file");
+                session.send("Oops! Something went wrong, we could not save the results.");
                 return console.log(err);
             } else {
               row = row + 1;
-              session.send("Great, your information has been saved!");
+              session.send("Your information has been saved, have a great day!");
               console.log("======The file was saved!======");
             }
         });
@@ -102,7 +132,7 @@ module.exports.setup = function(app) {
   // Question 1.
   bot.dialog("q1", [
     function(session) {
-      builder.Prompts.text(session, "Please provide your name");
+      builder.Prompts.text(session, "Please type your full name.");
     },
     function(session, results) {
       name = results.response;
@@ -113,7 +143,7 @@ module.exports.setup = function(app) {
   // Question 2.
   bot.dialog("q2", [
     function(session) {
-      builder.Prompts.text(session, "What is your social security number?");
+      builder.Prompts.text(session, "What is your social security number (yyyymmdd-xxxx)?");
     },
     function(session, results) {
       ssn = results.response;
@@ -124,24 +154,33 @@ module.exports.setup = function(app) {
   // Question 3.
   bot.dialog("q3", [
     function(session) {
-      builder.Prompts.text(session, "Which stock?");
+      builder.Prompts.text(session, "Which stock have you bought?");
     },
     function(session, results) {
-      if (results.response) {
-        session.dialogData.stock = results.response;
-      }
+      stock = results.response;
+      session.endDialog();
     }
   ]);
 
   // Question 4.
   bot.dialog("q4", [
     function(session) {
-      builder.Prompts.text(session, "Total value of transaction?");
+      builder.Prompts.text(session, "At what price did you buy it?");
     },
     function(session, results) {
-      if (results.response) {
-        session.dialogData.value = results.response;
-      }
+      quotedPrice = results.response;
+      session.endDialog();
+    }
+  ]);
+
+  // Question 5.
+  bot.dialog("q5", [
+    function(session) {
+      builder.Prompts.text(session, "How many stocks did you buy?");
+    },
+    function(session, results) {
+      numStocks = results.response;
+      session.endDialog();
     }
   ]);
 

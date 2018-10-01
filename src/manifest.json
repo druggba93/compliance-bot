@@ -27,7 +27,7 @@
         "entityId": "com.contoso.helloworld.hellotab",
         "name": "Hello Tab",
         /* "contentUrl": "https://yourteamsapp.ngrok.io/hello", */
-        /* "contentUrl": "http://localhost:3333/hello", */
+         /* "contentUrl": "http://localhost:3333/hello", */
         "contentUrl": "https://4c9885d9.ngrok.io/hello",
         "scopes": [
             "personal"
