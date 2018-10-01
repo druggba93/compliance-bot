@@ -2,7 +2,7 @@
     "$schema": "https://statics.teams.microsoft.com/sdk/v1.0/manifest/MicrosoftTeams.schema.json",
     "manifestVersion": "1.0",
     "version": "1.0.0",
-    "id": "5b9435bf-3fc8-4020-9088-60177991dfe5",
+    "id": "3a2e6856-f4a3-4a10-b1e4-7b5eb7b6ff61",
     "packageName": "com.contoso.helloworld",
     "developer": {
         "name": "Contoso",
@@ -27,21 +27,23 @@
         "entityId": "com.contoso.helloworld.hellotab",
         "name": "Hello Tab",
         /* "contentUrl": "https://yourteamsapp.ngrok.io/hello", */
-        "contentUrl": "http://localhost:3333/hello",
+        /* "contentUrl": "http://localhost:3333/hello", */
+        "contentUrl": "https://4c9885d9.ngrok.io/hello",
         "scopes": [
             "personal"
         ]
     }],
     "configurableTabs": [{
         /* "configurationUrl": "https://yourteamsapp.ngrok.io/configure", */
-        "configurationUrl": "http://localhost:3333/second/configure",
+        /* "configurationUrl": "http://localhost:3333/second/configure", */
+        "contentUrl": "https://4c9885d9.ngrok.io/configure",
         "canUpdateConfiguration": true,
         "scopes": [
             "team"
         ]
     }],
     "bots": [{
-        "botId": "5b9435bf-3fc8-4020-9088-60177991dfe5",
+        "botId": "3a2e6856-f4a3-4a10-b1e4-7b5eb7b6ff61",
         "needsChannelSelector": false,
         "isNotificationOnly": false,
         "scopes": [
@@ -50,7 +52,7 @@
         ]
     }],
     "composeExtensions": [{
-        "botId": "5b9435bf-3fc8-4020-9088-60177991dfe5",
+        "botId": "3a2e6856-f4a3-4a10-b1e4-7b5eb7b6ff61",
         "scopes": [
             "personal",
             "team"
