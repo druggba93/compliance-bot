@@ -20,6 +20,8 @@
     "botbuilder": "^3.11.0",
     "botbuilder-teams": "^0.1.6",
     "config": "^1.28.1",
+    "excel4node": "^1.6.0",
+    "exceljs": "^1.6.2",
     "express": "^4.16.2",
     "faker": "^4.1.0",
     "pug": "^2.0.0-rc.4"
