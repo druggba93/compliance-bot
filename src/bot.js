@@ -68,16 +68,18 @@ module.exports.setup = function(app) {
     function(session, args) {
       // If correct input.
       if (args.response) {
-        session.send("Great, your information will be saved!");
         worksheet.cell(row,1).string(name);
         worksheet.cell(row,2).string(ssn);
         // Write to excel
         workbook.write("test.xlsx", function(err) {
             if(err) {
+                session.send("Could not save to file");
                 return console.log(err);
+            } else {
+              row = row + 1;
+              session.send("Great, your information has been saved!");
+              console.log("======The file was saved!======");
             }
-            row = row + 1;
-            console.log("The file was saved!");
         });
         session.endDialog();
       } else {
