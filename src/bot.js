@@ -10,8 +10,8 @@ module.exports.setup = function(app) {
   // Write to excel
   var excel = require('excel4node'); // Require library
   var workbook = new excel.Workbook(); // Create a new instance of a Workbook class
-  var row = 1;
-  var worksheet = workbook.addWorksheet('Sheet 1');
+  var worksheet = workbook.addWorksheet('Sheet 1'); // Add worksheet
+  var row = 1; // Keep track of current row
 
   // Create a connector to handle the conversations
   var connector = new teams.TeamsChatConnector({
@@ -27,9 +27,11 @@ module.exports.setup = function(app) {
   // The variables, used to chose the wrong entry.
   var menuItems = {
     "Name": {
+      // Dialog q1
       item: "q1"
     },
     "SSN": {
+      // Dialog q2
       item: "q2"
     }
   };
@@ -67,6 +69,16 @@ module.exports.setup = function(app) {
       // If correct input.
       if (args.response) {
         session.send("Great, your information will be saved!");
+        worksheet.cell(row,1).string(name);
+        worksheet.cell(row,2).string(ssn);
+        // Write to excel
+        workbook.write("test.xlsx", function(err) {
+            if(err) {
+                return console.log(err);
+            }
+            row = row + 1;
+            console.log("The file was saved!");
+        });
         session.endDialog();
       } else {
         // Choose wrong entry.
@@ -131,56 +143,6 @@ module.exports.setup = function(app) {
     }
   ]);
 
-  // // This is a dinner reservation bot that uses a waterfall technique to prompt users for input.
-  // var bot = new builder.UniversalBot(connector, [
-  //     function (session) {
-  //         session.send("Registrera aktieaffärer.");
-  //         builder.Prompts.text(session, "Please provide your name");
-  //     },
-  //     function (session, results) {
-  //         session.dialogData.name = results.response;
-  //         builder.Prompts.text(session, "What is your social security number?");
-  //     },
-  //     function (session, results) {
-  //         session.dialogData.ssn = results.response;
-  //         builder.Prompts.text(session, "Which stock?");
-  //     },
-  //     function (session, results) {
-  //         session.dialogData.stock = results.response;
-  //         builder.Prompts.number(session, "Total value of transaction?");
-  //     },
-  //     function (session, results) {
-  //         session.dialogData.value = results.response;
-  //         builder.Prompts.number(session, "New stock?");
-  //         myfunc(session, results);
-  //         // Process request and display reservation details
-  //         var msg = ` Name             : ${session.dialogData.name} <br/>
-  //                     SSN              : ${session.dialogData.ssn} <br/>
-  //                     Stock            : ${session.dialogData.stock} <br/>
-  //                     Transaction value: ${session.dialogData.value}`;
-  //
-  //         session.send('Is this the correct input?')
-  //         session.send(msg);
-  //         session.send('Please answer y/n.')
-  //
-  //         worksheet.cell(row,1).string(session.dialogData.name);
-  //         worksheet.cell(row,2).string(session.dialogData.ssn);
-  //         worksheet.cell(row,3).string(session.dialogData.stock);
-  //         worksheet.cell(row,4).number(session.dialogData.value);
-  //
-  //         // Write to excel
-  //         workbook.write("test.xlsx", function(err) {
-  //             if(err) {
-  //                 return console.log(err);
-  //             }
-  //             row = row + 1;
-  //             console.log("The file was saved!");
-  //         });
-  //
-  //         session.endDialog();
-  //     }
-  //
-  // ]).set('storage', inMemoryBotStorage); // Register in-memory storage
   // Setup an endpoint on the router for the bot to listen.
   // NOTE: This endpoint cannot be changed and must be api/messages
   app.post('/api/messages', connector.listen());
