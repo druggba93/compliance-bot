@@ -26,17 +26,17 @@
     "staticTabs": [{
         "entityId": "com.contoso.helloworld.hellotab",
         "name": "Hello Tab",
-        /* "contentUrl": "https://yourteamsapp.ngrok.io/hello", */
-         /* "contentUrl": "http://localhost:3333/hello", */
-        "contentUrl": "https://4c9885d9.ngrok.io/hello",
+        "contentUrl": "https://yourteamsapp.ngrok.io/hello",
+        "contentUrl": "http://localhost:3333/hello",
+        /* "contentUrl": "https://4c9885d9.ngrok.io/hello", */
         "scopes": [
             "personal"
         ]
     }],
     "configurableTabs": [{
         /* "configurationUrl": "https://yourteamsapp.ngrok.io/configure", */
-        /* "configurationUrl": "http://localhost:3333/second/configure", */
-        "contentUrl": "https://4c9885d9.ngrok.io/configure",
+        "configurationUrl": "http://localhost:3333/second/configure",
+        /* "contentUrl": "https://4c9885d9.ngrok.io/configure", */
         "canUpdateConfiguration": true,
         "scopes": [
             "team"

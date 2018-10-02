@@ -114,8 +114,7 @@ module.exports.setup = function(app) {
         session.endDialog();
       } else {
         // Choose wrong entry.
-        session.send("Which entry is wrong?");
-        builder.Prompts.choice(session, "Main Menu:", menuItems);
+        builder.Prompts.choice(session, "Select the entry you want to change (Type the entry or 1-"+ Object.keys(menuItems).length +"):", menuItems);
       }
     },
     function(session, results) {
