@@ -128,7 +128,7 @@ module.exports.setup = function(app) {
       }).catch(function(err) {
        // Here is the error
        var worksheet = workbook.addWorksheet(sheetname);
-       var r = worksheet.getRow(1);
+       var row = worksheet.getRow(1);
        row.getCell(1).value = name;
        row.getCell(2).value = ssn;
        row.getCell(3).value = stock;
