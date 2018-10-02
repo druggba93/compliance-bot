@@ -6,15 +6,21 @@ module.exports.setup = function(app) {
   var builder = require('botbuilder');
   var teams = require('botbuilder-teams');
   var config = require('config');
-  var excel = require('excel4node'); // Require library
+  //var excel = require('excel4node'); // Require library
+
+  var excel = require('exceljs');
+  var workbook = new excel.Workbook();
+  const filename = "transactions.xlsx";
+  const sheetname = "Transactions";
 
   // Get bot info from config file
   var botConfig = config.get('bot');
 
   // Setup excel file
-  var workbook = new excel.Workbook(); // Create a new instance of a Workbook class
-  var worksheet = workbook.addWorksheet('Transactions'); // Add worksheet
-  var row = 1; // Keep track of current row
+  // var workbook = new excel.Workbook(); // Create a new instance of a Workbook class
+  // var worksheet = workbook.addWorksheet('Transactions'); // Add worksheet
+  // var row = 1; // Keep track of current row
+
 
   // Create a connector to handle the conversations
   var connector = new teams.TeamsChatConnector({
@@ -104,22 +110,55 @@ module.exports.setup = function(app) {
     function(session, args) {
       // If correct input
       if (args.response) {
-        // Write results to excel file
-        worksheet.cell(row, 1).string(name);
-        worksheet.cell(row, 2).string(ssn);
-        worksheet.cell(row, 3).string(stock);
-        worksheet.cell(row, 4).string(quotedPrice);
-        worksheet.cell(row, 5).string(numStocks);
-        worksheet.cell(row, 6).number(quotedPrice * numStocks);
-        workbook.write("transactions.xlsx", function(err) {
-          if (err) {
-            session.send("Oops! Something went wrong, we could not save the results.");
-            return console.log(err);
-          } else {
-            row = row + 1;
-            session.send("Your information has been saved, have a great day!");
-          }
-        });
+      workbook.xlsx.readFile(filename)
+      .then(function() {
+            var worksheet = workbook.getWorksheet(sheetname);
+            var row = worksheet.getRow(worksheet.rowCount + 1);
+            row.getCell(1).value = name;
+            row.getCell(2).value = ssn;
+            row.getCell(3).value = stock;
+            row.getCell(4).value = quotedPrice;
+            row.getCell(5).value = numStocks;
+            row.getCell(6).value = quotedPrice * numStocks;
+            row.commit();
+      })
+      .then(function() {
+        session.send("Your information has been saved, have a great day!");
+       return workbook.xlsx.writeFile(filename)
+      }).catch(function(err) {
+       // Here is the error
+       var worksheet = workbook.addWorksheet(sheetname);
+       var r = worksheet.getRow(1);
+       row.getCell(1).value = name;
+       row.getCell(2).value = ssn;
+       row.getCell(3).value = stock;
+       row.getCell(4).value = quotedPrice;
+       row.getCell(5).value = numStocks;
+       row.getCell(6).value = quotedPrice * numStocks;
+       row.commit();
+       workbook.xlsx.writeFile(filename)
+       console.log('Fel för att filen inte kunde hittas! Felet var : ' + err);
+       session.send("Your information has been saved, have a great day!");
+      });
+
+
+        // // Write results to excel file
+        // worksheet.cell(row, 1).string(name);
+        // worksheet.cell(row, 2).string(ssn);
+        // worksheet.cell(row, 3).string(stock);
+        // worksheet.cell(row, 4).string(quotedPrice);
+        // worksheet.cell(row, 5).string(numStocks);
+        // worksheet.cell(row, 6).number(quotedPrice * numStocks);
+        //
+        // workbook.write("transactions.xlsx", function(err) {
+        //   if (err) {
+        //     session.send("Oops! Something went wrong, we could not save the results.");
+        //     return console.log(err);
+        //   } else {
+        //     row = row + 1;
+        //     session.send("Your information has been saved, have a great day!");
+        //   }
+        // });
         session.endDialog();
       } else {
         // Choose wrong entry.
