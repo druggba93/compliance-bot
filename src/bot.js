@@ -1,16 +1,25 @@
 'use strict';
 
 module.exports.setup = function(app) {
+
+  // Required modules
   var builder = require('botbuilder');
   var teams = require('botbuilder-teams');
   var config = require('config');
+  //var excel = require('excel4node'); // Require library
+
+  var excel = require('exceljs');
+  var workbook = new excel.Workbook();
+  const filename = "transactions.xlsx"
+  const sheetname = "Transactions"
+
+  // Get bot info from config file
   var botConfig = config.get('bot');
 
-  // Write to excel
-  var excel = require('excel4node'); // Require library
-  var workbook = new excel.Workbook(); // Create a new instance of a Workbook class
-  var worksheet = workbook.addWorksheet('Sheet 1'); // Add worksheet
-  var row = 1; // Keep track of current row
+  // Setup excel file
+  // var workbook = new excel.Workbook(); // Create a new instance of a Workbook class
+  // var worksheet = workbook.addWorksheet('Transactions'); // Add worksheet
+  // var row = 1; // Keep track of current row
 
   // Create a connector to handle the conversations
   var connector = new teams.TeamsChatConnector({
@@ -21,9 +30,10 @@ module.exports.setup = function(app) {
     appPassword: process.env.MICROSOFT_APP_PASSWORD || botConfig.microsoftAppPassword
   });
 
+  // We save information temporarily in the Bot storage memory
   var inMemoryBotStorage = new builder.MemoryBotStorage();
 
-  // The variables, used to chose the wrong entry.
+  // The variables used to chose the wrong entries
   var menuItems = {
     "Name": {
       // Dialog q1
@@ -47,7 +57,7 @@ module.exports.setup = function(app) {
     }
   };
 
-  // The variables used to store information about the user.
+  // Variables used to store information about the transaction
   var name = "";
   var ssn = "";
   var stock = "";
@@ -57,23 +67,23 @@ module.exports.setup = function(app) {
   // Create the bot.
   var bot = new builder.UniversalBot(connector, [
     function(session) {
-      // Begin dialog.
+      // Begin name dialog
       session.beginDialog("q1");
     },
     function(session, results) {
-      // Begin dialog.
+      // Begin SSN dialog
       session.beginDialog("q2");
     },
     function(session, results) {
-      // Begin dialog.
+      // Begin stock dialog
       session.beginDialog("q3");
     },
     function(session, results) {
-      // Begin dialog.
+      // Begin quoted price dialog
       session.beginDialog("q4");
     },
     function(session, results) {
-      // Begin dialog.
+      // Begin number of stocks dialog
       session.beginDialog("q5");
     },
     function(session, results) {
@@ -82,38 +92,79 @@ module.exports.setup = function(app) {
     }
   ]).set('storage', inMemoryBotStorage); // Register in-memory storage
 
-  // Confirm the results.
+  // Confirm the results
   bot.dialog("conf", [
     function(session) {
-      // Print current variables.
-      var msg = "Name: " + name + "\n SSN:  " + ssn + "\n Stock: " + stock + "\n Quoted Price: " + quotedPrice + "\n Number of stocks: " + numStocks + "\n Transaction value: " + quotedPrice*numStocks;
-      session.send(msg);
-      builder.Prompts.confirm(session, "Is this the correct input? Please answer yes/no.");
+      // Print current entries
+      var msg = "Transaction information" +
+                "\n\nName: " + name +
+                "\n SSN: " + ssn +
+                "\n Stock: " + stock +
+                "\n Quoted Price: " + quotedPrice +
+                "\n Number of stocks: " + numStocks +
+                "\n Transaction value: " + quotedPrice * numStocks +
+                "\n\nIs this the correct input? Please answer yes/no.";
+      builder.Prompts.confirm(session, msg);
     },
     function(session, args) {
-      // If correct input.
+      // If correct input
       if (args.response) {
-        worksheet.cell(row,1).string(name);
-        worksheet.cell(row,2).string(ssn);
-        worksheet.cell(row,3).string(stock);
-        worksheet.cell(row,4).string(quotedPrice);
-        worksheet.cell(row,5).string(numStocks);
-        worksheet.cell(row,6).number(quotedPrice*numStocks);
-        // Write to excel
-        workbook.write("test.xlsx", function(err) {
-            if(err) {
-                session.send("Oops! Something went wrong, we could not save the results.");
-                return console.log(err);
-            } else {
-              row = row + 1;
-              session.send("Your information has been saved, have a great day!");
-              console.log("======The file was saved!======");
-            }
-        });
+
+      workbook.xlsx.readFile(filename)
+      .then(function() {
+            var worksheet = workbook.getWorksheet(sheetname);
+            var row = worksheet.getRow(worksheet.rowCount + 1);
+            row.getCell(1).value = name;
+            row.getCell(2).value = ssn;
+            row.getCell(3).value = stock;
+            row.getCell(4).value = quotedPrice;
+            row.getCell(5).value = numStocks;
+            row.getCell(6).value = quotedPrice * numStocks;
+            row.commit();
+      })
+      .then(function() {
+        session.send("Your information has been saved, have a great day!");
+       return workbook.xlsx.writeFile(filename)
+      }).catch(function(err) {
+       // Here is the error
+       var worksheet = workbook.addWorksheet(sheetname);
+       var r = worksheet.getRow(1);
+       row.getCell(1).value = name;
+       row.getCell(2).value = ssn;
+       row.getCell(3).value = stock;
+       row.getCell(4).value = quotedPrice;
+       row.getCell(5).value = numStocks;
+       row.getCell(6).value = quotedPrice * numStocks;
+       row.commit();
+       workbook.xlsx.writeFile(filename)
+       console.log('Fel för att filen inte kunde hittas! Felet var : ' + err);
+       session.send("Your information has been saved, have a great day!");
+      });
+
+
+        // // Write results to excel file
+        // worksheet.cell(row, 1).string(name);
+        // worksheet.cell(row, 2).string(ssn);
+        // worksheet.cell(row, 3).string(stock);
+        // worksheet.cell(row, 4).string(quotedPrice);
+        // worksheet.cell(row, 5).string(numStocks);
+        // worksheet.cell(row, 6).number(quotedPrice * numStocks);
+        //
+        // workbook.write("transactions.xlsx", function(err) {
+        //   if (err) {
+        //     session.send("Oops! Something went wrong, we could not save the results.");
+        //     return console.log(err);
+        //   } else {
+        //     row = row + 1;
+        //     session.send("Your information has been saved, have a great day!");
+        //   }
+        // });
+
+
         session.endDialog();
       } else {
         // Choose wrong entry.
-        builder.Prompts.choice(session, "Select the entry you want to change (Type the entry or 1-"+ Object.keys(menuItems).length +"):", menuItems);
+        builder.Prompts.choice(session, "Select entry to change (Type the entry or 1-" + Object.keys(menuItems).length + "):", menuItems);
       }
     },
     function(session, results) {
@@ -123,14 +174,6 @@ module.exports.setup = function(app) {
     function(session) {
       // Restart the confirmation dialog.
       session.beginDialog("conf");
-    }
-  ]);
-
-  // Welcome Dialog
-  bot.dialog("welcome", [
-    function(session) {
-      builder.Prompts.text(session, "Welcome, I'm a bot");
-      session.endDialog();
     }
   ]);
 
@@ -189,17 +232,18 @@ module.exports.setup = function(app) {
     }
   ]);
 
-  bot.on('conversationUpdate', function (message) {
+  // Welcome message when chat starts
+  bot.on('conversationUpdate', function(message) {
     if (message.membersAdded) {
-        message.membersAdded.forEach(function (identity) {
-            if (identity.id === message.address.bot.id) {
-                bot.send(new builder.Message()
-                    .address(message.address)
-                    .text("Hi, I am the compliance bot! Here you can register your financial transactions. Please type 'start' and press enter to continue."));
-            }
-        });
+      message.membersAdded.forEach(function(identity) {
+        if (identity.id === message.address.bot.id) {
+          bot.send(new builder.Message()
+            .address(message.address)
+            .text("Hi, I am the compliance bot! Here you can register your financial transactions. Please type 'start' and press enter to continue."));
+        }
+      });
     }
-});
+  });
 
   // Setup an endpoint on the router for the bot to listen.
   // NOTE: This endpoint cannot be changed and must be api/messages
