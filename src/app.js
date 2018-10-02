@@ -17,5 +17,5 @@ messagingExtension.setup();
 
 // Start our nodejs app
 app.listen(process.env.PORT || 3333, function() {
-    console.log('App started listening on port 3333');
+  console.log('App started listening on port 3333');
 });
