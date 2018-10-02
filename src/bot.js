@@ -58,7 +58,6 @@ module.exports.setup = function(app) {
   var bot = new builder.UniversalBot(connector, [
     function(session) {
       // Begin dialog.
-      session.send("Welcome! Here you can register your transactions.");
       session.beginDialog("q1");
     },
     function(session, results) {
@@ -127,6 +126,13 @@ module.exports.setup = function(app) {
     }
   ]);
 
+  // Welcome Dialog
+  bot.dialog("welcome", [
+    function(session) {
+      builder.Prompts.text(session, "Welcome, I'm a bot");
+      session.endDialog();
+    }
+  ]);
 
   // Question 1.
   bot.dialog("q1", [
@@ -182,6 +188,18 @@ module.exports.setup = function(app) {
       session.endDialog();
     }
   ]);
+
+  bot.on('conversationUpdate', function (message) {
+    if (message.membersAdded) {
+        message.membersAdded.forEach(function (identity) {
+            if (identity.id === message.address.bot.id) {
+                bot.send(new builder.Message()
+                    .address(message.address)
+                    .text("Hi, I am the compliance bot! Here you can register your financial transactions. Please type 'start' and press enter to continue."));
+            }
+        });
+    }
+});
 
   // Setup an endpoint on the router for the bot to listen.
   // NOTE: This endpoint cannot be changed and must be api/messages
