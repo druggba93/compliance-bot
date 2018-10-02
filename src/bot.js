@@ -92,13 +92,13 @@ module.exports.setup = function(app) {
     function(session) {
       // Print current entries
       var msg = "Transaction information" +
-                "\n\nName: " + name +
-                "\n SSN: " + ssn +
-                "\n Stock: " + stock +
-                "\n Quoted Price: " + quotedPrice +
-                "\n Number of stocks: " + numStocks +
-                "\n Transaction value: " + quotedPrice * numStocks +
-                "\n\nIs this the correct input? Please answer yes/no.";
+        "\n\nName: " + name +
+        "\n SSN: " + ssn +
+        "\n Stock: " + stock +
+        "\n Quoted Price: " + quotedPrice +
+        "\n Number of stocks: " + numStocks +
+        "\n Transaction value: " + quotedPrice * numStocks +
+        "\n\nIs this the correct input? Please answer yes/no.";
       builder.Prompts.confirm(session, msg);
     },
     function(session, args) {

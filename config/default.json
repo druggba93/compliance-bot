@@ -1,6 +1,15 @@
-{
+/* Ngrok-bot */
+/* {
     "bot": {
         "microsoftAppId": "3a2e6856-f4a3-4a10-b1e4-7b5eb7b6ff61",
         "microsoftAppPassword": "wzb1111{uoohNSJXXPA1]@?"
     }
+} */
+
+/* Lokal bot */
+{
+  "bot": {
+      "microsoftAppId": "5b9435bf-3fc8-4020-9088-60177991dfe5",
+      "microsoftAppPassword": "wxbeQXQT713iqkKRR66|]^+"
+  }
 }
