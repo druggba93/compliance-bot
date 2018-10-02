@@ -10,8 +10,8 @@ module.exports.setup = function(app) {
 
   var excel = require('exceljs');
   var workbook = new excel.Workbook();
-  const filename = "transactions.xlsx"
-  const sheetname = "Transactions"
+  const filename = "transactions.xlsx";
+  const sheetname = "Transactions";
 
   // Get bot info from config file
   var botConfig = config.get('bot');
@@ -20,6 +20,7 @@ module.exports.setup = function(app) {
   // var workbook = new excel.Workbook(); // Create a new instance of a Workbook class
   // var worksheet = workbook.addWorksheet('Transactions'); // Add worksheet
   // var row = 1; // Keep track of current row
+
 
   // Create a connector to handle the conversations
   var connector = new teams.TeamsChatConnector({
@@ -109,7 +110,6 @@ module.exports.setup = function(app) {
     function(session, args) {
       // If correct input
       if (args.response) {
-
       workbook.xlsx.readFile(filename)
       .then(function() {
             var worksheet = workbook.getWorksheet(sheetname);
@@ -159,8 +159,6 @@ module.exports.setup = function(app) {
         //     session.send("Your information has been saved, have a great day!");
         //   }
         // });
-
-
         session.endDialog();
       } else {
         // Choose wrong entry.
