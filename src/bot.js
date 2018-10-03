@@ -1,5 +1,24 @@
 'use strict';
 
+function addHeaders(worksheet) {
+  var row = worksheet.getRow(1);
+  row.getCell(1).value = "Name";
+  row.getCell(2).value = "SSN";
+  row.getCell(3).value = "Stock";
+  row.getCell(4).value = "Quoted Price";
+  row.getCell(5).value = "Number of stocks";
+  row.getCell(6).value = "Value";
+};
+
+function addRow(name, ssn, stock, quotedPrice, numStocks, row, worksheet) {
+  row.getCell(1).value = name;
+  row.getCell(2).value = ssn;
+  row.getCell(3).value = stock;
+  row.getCell(4).value = quotedPrice;
+  row.getCell(5).value = numStocks;
+  row.getCell(6).value = quotedPrice * numStocks;
+};
+
 module.exports.setup = function(app) {
 
   // Required modules
@@ -108,30 +127,19 @@ module.exports.setup = function(app) {
           .then(function() {
             var worksheet = workbook.getWorksheet(sheetname);
             var row = worksheet.getRow(worksheet.rowCount + 1);
-            row.getCell(1).value = name;
-            row.getCell(2).value = ssn;
-            row.getCell(3).value = stock;
-            row.getCell(4).value = quotedPrice;
-            row.getCell(5).value = numStocks;
-            row.getCell(6).value = quotedPrice * numStocks;
+            addRow(name, ssn, stock, quotedPrice, numStocks, row, worksheet);
             row.commit();
           })
           .then(function() {
             session.send("Your information has been saved, have a great day!");
             return workbook.xlsx.writeFile(filename)
           }).catch(function(err) {
-            // Here is the error
             var worksheet = workbook.addWorksheet(sheetname);
-            var row = worksheet.getRow(1);
-            row.getCell(1).value = name;
-            row.getCell(2).value = ssn;
-            row.getCell(3).value = stock;
-            row.getCell(4).value = quotedPrice;
-            row.getCell(5).value = numStocks;
-            row.getCell(6).value = quotedPrice * numStocks;
+            var row = worksheet.getRow(2);
+            addHeaders(worksheet);
+            addRow(name, ssn, stock, quotedPrice, numStocks, row, worksheet);
             row.commit();
             workbook.xlsx.writeFile(filename)
-            console.log('Fel för att filen inte kunde hittas! Felet var : ' + err);
             session.send("Your information has been saved, have a great day!");
           });
         session.endDialog();
