@@ -2,24 +2,14 @@
 
 module.exports.setup = function(app) {
 
-  // Required modules
+  // Required modules and functions
   var builder = require('botbuilder');
   var teams = require('botbuilder-teams');
   var config = require('config');
-  //var excel = require('excel4node'); // Require library
-
   var excel = require('exceljs');
-  var workbook = new excel.Workbook();
-  const filename = "transactions.xlsx";
-  const sheetname = "Transactions";
-
-  // Get bot info from config file
-  var botConfig = config.get('bot');
+  var excelFunctions = require('./excelFunctions');
 
   // Setup excel file
-  // var workbook = new excel.Workbook(); // Create a new instance of a Workbook class
-  // var worksheet = workbook.addWorksheet('Transactions'); // Add worksheet
-  // var row = 1; // Keep track of current row
   var workbook = new excel.Workbook(); // Create a new instance of a Workbook class
   const filename = "transactions.xlsx"; // Name of excel-file
   const sheetname = "Transactions"; // Sheetname
@@ -38,6 +28,18 @@ module.exports.setup = function(app) {
 
   // We save information temporarily in the Bot storage memory
   var inMemoryBotStorage = new builder.MemoryBotStorage();
+
+  // The different types of dialogs to start
+  var dialogTypes = {
+    "Add new transaction": {
+      // Dialog q1
+      item: "addNew"
+    },
+    "Change existing transaction": {
+      // Dialog q2
+      item: "changeExisting"
+    }
+  };
 
   // The variables used to chose the wrong entries
   var menuItems = {
@@ -72,31 +74,67 @@ module.exports.setup = function(app) {
 
   // Create the bot.
   var bot = new builder.UniversalBot(connector, [
+    // function(session) {
+    //   // Restart the confirmation dialog.
+    //   session.beginDialog("FetchMemberList");
+    // },
+    // function(session) {
+    //   // Chose dialog
+    //   builder.Prompts.choice(session, "What do you want to do? Type the entry or 1-" + Object.keys(dialogTypes).length + ":", dialogTypes);
+    // },
+    // function(session, results) {
+    //   session.beginDialog(dialogTypes[results.response.entity].item);
+    // }
+    function(session) {
+      // Restart the confirmation dialog.
+      session.beginDialog("addNew");
+    }
+  ]).set('storage', inMemoryBotStorage); // Register in-memory storage
+
+  // Add a new transactions
+  bot.dialog("addNew", [
     function(session) {
       // Begin name dialog
       session.beginDialog("q1");
     },
-    function(session, results) {
+    function(session) {
       // Begin SSN dialog
       session.beginDialog("q2");
     },
-    function(session, results) {
+    function(session) {
       // Begin stock dialog
       session.beginDialog("q3");
     },
-    function(session, results) {
+    function(session) {
       // Begin quoted price dialog
       session.beginDialog("q4");
     },
-    function(session, results) {
+    function(session) {
       // Begin number of stocks dialog
       session.beginDialog("q5");
     },
-    function(session, results) {
+    function(session) {
       // Begin confirmation dialog.
       session.beginDialog("conf");
     }
-  ]).set('storage', inMemoryBotStorage); // Register in-memory storage
+  ]);
+
+  // Change existing transaction
+  bot.dialog("changeExisting", [
+    function(session) {
+      workbook.xlsx.readFile(filename)
+        .then(function() {
+          var worksheet = workbook.getWorksheet(sheetname);
+          // Iterate over all rows that have values in a worksheet
+          worksheet.eachRow(function(row, rowNumber) {
+            var rowValues = JSON.stringify(row.values);
+            //var rowValues = row.values;
+            console.log(rowValues[2]);
+            console.log('Row ' + rowNumber + ' = ' + rowValues);
+          });
+        })
+    }
+  ]);
 
   // Confirm the results
   bot.dialog("conf", [
@@ -115,75 +153,25 @@ module.exports.setup = function(app) {
     function(session, args) {
       // If correct input
       if (args.response) {
-      workbook.xlsx.readFile(filename)
-      .then(function() {
         workbook.xlsx.readFile(filename)
           .then(function() {
             var worksheet = workbook.getWorksheet(sheetname);
             var row = worksheet.getRow(worksheet.rowCount + 1);
-            row.getCell(1).value = name;
-            row.getCell(2).value = ssn;
-            row.getCell(3).value = stock;
-            row.getCell(4).value = quotedPrice;
-            row.getCell(5).value = numStocks;
-            row.getCell(6).value = quotedPrice * numStocks;
+            excelFunctions.addRow(name, ssn, stock, quotedPrice, numStocks, row, worksheet);
             row.commit();
-      })
-      .then(function() {
-        session.send("Your information has been saved, have a great day!");
-       return workbook.xlsx.writeFile(filename)
-      }).catch(function(err) {
-       // Here is the error
-       var worksheet = workbook.addWorksheet(sheetname);
-       var row = worksheet.getRow(1);
-       row.getCell(1).value = name;
-       row.getCell(2).value = ssn;
-       row.getCell(3).value = stock;
-       row.getCell(4).value = quotedPrice;
-       row.getCell(5).value = numStocks;
-       row.getCell(6).value = quotedPrice * numStocks;
-       row.commit();
-       workbook.xlsx.writeFile(filename)
-       console.log('Fel för att filen inte kunde hittas! Felet var : ' + err);
-       session.send("Your information has been saved, have a great day!");
-      });
-
-
-        // // Write results to excel file
-        // worksheet.cell(row, 1).string(name);
-        // worksheet.cell(row, 2).string(ssn);
-        // worksheet.cell(row, 3).string(stock);
-        // worksheet.cell(row, 4).string(quotedPrice);
-        // worksheet.cell(row, 5).string(numStocks);
-        // worksheet.cell(row, 6).number(quotedPrice * numStocks);
-        //
-        // workbook.write("transactions.xlsx", function(err) {
-        //   if (err) {
-        //     session.send("Oops! Something went wrong, we could not save the results.");
-        //     return console.log(err);
-        //   } else {
-        //     row = row + 1;
-        //     session.send("Your information has been saved, have a great day!");
-        //   }
-        // });
           })
           .then(function() {
             session.send("Your information has been saved, have a great day!");
             return workbook.xlsx.writeFile(filename)
           }).catch(function(err) {
-            // Here is the error
             var worksheet = workbook.addWorksheet(sheetname);
-            var row = worksheet.getRow(1);
-            row.getCell(1).value = name;
-            row.getCell(2).value = ssn;
-            row.getCell(3).value = stock;
-            row.getCell(4).value = quotedPrice;
-            row.getCell(5).value = numStocks;
-            row.getCell(6).value = quotedPrice * numStocks;
+            var row = worksheet.getRow(2);
+            excelFunctions.addHeaders(worksheet);
+            excelFunctions.addRow(name, ssn, stock, quotedPrice, numStocks, row, worksheet);
             row.commit();
             workbook.xlsx.writeFile(filename)
-            console.log('Fel för att filen inte kunde hittas! Felet var : ' + err);
             session.send("Your information has been saved, have a great day!");
+            console.log("-------Error was: " + err);
           });
         session.endDialog();
       } else {
@@ -255,6 +243,23 @@ module.exports.setup = function(app) {
       session.endDialog();
     }
   ]);
+
+  // Can be used later to automatically retrieve information of user.
+  bot.dialog('FetchMemberList', function(session) {
+    var conversationId = session.message.address.conversation.id;
+    console.log(session.message);
+    connector.fetchMembers(
+      (session.message.address).serviceUrl,
+      conversationId,
+      (err, result) => {
+        if (err) {
+          session.endDialog('There is some error');
+        } else {
+          session.endDialog('%s', JSON.stringify(result));
+        }
+      }
+    );
+  });
 
   // Welcome message when chat starts
   bot.on('conversationUpdate', function(message) {
