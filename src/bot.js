@@ -88,7 +88,8 @@ module.exports.setup = function(app) {
     }
   ]).set('storage', inMemoryBotStorage); // Register in-memory storage
 
-  botDialogs(bot, builder, menuItems, workbook, filename, sheetname, excelFunctions)
+    // Load functions from bot dialogs
+    botDialogs(bot, builder, menuItems, workbook, filename, sheetname, excelFunctions);
 
   // Add a new transactions
   bot.dialog("addNew", [
