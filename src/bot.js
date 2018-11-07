@@ -20,7 +20,12 @@ module.exports.setup = function(app) {
   // var workbook = new excel.Workbook(); // Create a new instance of a Workbook class
   // var worksheet = workbook.addWorksheet('Transactions'); // Add worksheet
   // var row = 1; // Keep track of current row
+  var workbook = new excel.Workbook(); // Create a new instance of a Workbook class
+  const filename = "transactions.xlsx"; // Name of excel-file
+  const sheetname = "Transactions"; // Sheetname
 
+  // Get bot info from config file
+  var botConfig = config.get('bot');
 
   // Create a connector to handle the conversations
   var connector = new teams.TeamsChatConnector({
@@ -112,6 +117,8 @@ module.exports.setup = function(app) {
       if (args.response) {
       workbook.xlsx.readFile(filename)
       .then(function() {
+        workbook.xlsx.readFile(filename)
+          .then(function() {
             var worksheet = workbook.getWorksheet(sheetname);
             var row = worksheet.getRow(worksheet.rowCount + 1);
             row.getCell(1).value = name;
@@ -159,6 +166,25 @@ module.exports.setup = function(app) {
         //     session.send("Your information has been saved, have a great day!");
         //   }
         // });
+          })
+          .then(function() {
+            session.send("Your information has been saved, have a great day!");
+            return workbook.xlsx.writeFile(filename)
+          }).catch(function(err) {
+            // Here is the error
+            var worksheet = workbook.addWorksheet(sheetname);
+            var row = worksheet.getRow(1);
+            row.getCell(1).value = name;
+            row.getCell(2).value = ssn;
+            row.getCell(3).value = stock;
+            row.getCell(4).value = quotedPrice;
+            row.getCell(5).value = numStocks;
+            row.getCell(6).value = quotedPrice * numStocks;
+            row.commit();
+            workbook.xlsx.writeFile(filename)
+            console.log('Fel för att filen inte kunde hittas! Felet var : ' + err);
+            session.send("Your information has been saved, have a great day!");
+          });
         session.endDialog();
       } else {
         // Choose wrong entry.
