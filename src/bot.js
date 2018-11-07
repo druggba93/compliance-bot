@@ -8,6 +8,7 @@ module.exports.setup = function(app) {
   var config = require('config');
   var excel = require('exceljs');
   var excelFunctions = require('./excelFunctions');
+  var botDialogs = require('./botDialogs');
 
   // Setup excel file
   var workbook = new excel.Workbook(); // Create a new instance of a Workbook class
@@ -65,12 +66,8 @@ module.exports.setup = function(app) {
     }
   };
 
-  // Variables used to store information about the transaction
-  var name = "";
-  var ssn = "";
-  var stock = "";
-  var quotedPrice = "";
-  var numStocks = "";
+
+
 
   // Create the bot.
   var bot = new builder.UniversalBot(connector, [
@@ -90,6 +87,8 @@ module.exports.setup = function(app) {
       session.beginDialog("addNew");
     }
   ]).set('storage', inMemoryBotStorage); // Register in-memory storage
+
+  botDialogs(bot, builder, menuItems, workbook, filename, sheetname, excelFunctions)
 
   // Add a new transactions
   bot.dialog("addNew", [
@@ -136,113 +135,6 @@ module.exports.setup = function(app) {
     }
   ]);
 
-  // Confirm the results
-  bot.dialog("conf", [
-    function(session) {
-      // Print current entries
-      var msg = "Transaction information" +
-        "\n\nName: " + name +
-        "\n SSN: " + ssn +
-        "\n Stock: " + stock +
-        "\n Quoted Price: " + quotedPrice +
-        "\n Number of stocks: " + numStocks +
-        "\n Transaction value: " + quotedPrice * numStocks +
-        "\n\nIs this the correct input? Please answer yes/no.";
-      builder.Prompts.confirm(session, msg);
-    },
-    function(session, args) {
-      // If correct input
-      if (args.response) {
-        workbook.xlsx.readFile(filename)
-          .then(function() {
-            var worksheet = workbook.getWorksheet(sheetname);
-            var row = worksheet.getRow(worksheet.rowCount + 1);
-            excelFunctions.addRow(name, ssn, stock, quotedPrice, numStocks, row, worksheet);
-            row.commit();
-          })
-          .then(function() {
-            session.send("Your information has been saved, have a great day!");
-            return workbook.xlsx.writeFile(filename)
-          }).catch(function(err) {
-            var worksheet = workbook.addWorksheet(sheetname);
-            var row = worksheet.getRow(2);
-            excelFunctions.addHeaders(worksheet);
-            excelFunctions.addRow(name, ssn, stock, quotedPrice, numStocks, row, worksheet);
-            row.commit();
-            workbook.xlsx.writeFile(filename)
-            session.send("Your information has been saved, have a great day!");
-            console.log("-------Error was: " + err);
-          });
-        session.endDialog();
-      } else {
-        // Choose wrong entry.
-        builder.Prompts.choice(session, "Select entry to change (Type the entry or 1-" + Object.keys(menuItems).length + "):", menuItems);
-      }
-    },
-    function(session, results) {
-      // If not correct input.
-      session.beginDialog(menuItems[results.response.entity].item);
-    },
-    function(session) {
-      // Restart the confirmation dialog.
-      session.beginDialog("conf");
-    }
-  ]);
-
-  // Question 1.
-  bot.dialog("q1", [
-    function(session) {
-      builder.Prompts.text(session, "Please type your full name.");
-    },
-    function(session, results) {
-      name = results.response;
-      session.endDialog();
-    }
-  ]);
-
-  // Question 2.
-  bot.dialog("q2", [
-    function(session) {
-      builder.Prompts.text(session, "What is your social security number (yyyymmdd-xxxx)?");
-    },
-    function(session, results) {
-      ssn = results.response;
-      session.endDialog();
-    }
-  ]);
-
-  // Question 3.
-  bot.dialog("q3", [
-    function(session) {
-      builder.Prompts.text(session, "Which stock have you bought?");
-    },
-    function(session, results) {
-      stock = results.response;
-      session.endDialog();
-    }
-  ]);
-
-  // Question 4.
-  bot.dialog("q4", [
-    function(session) {
-      builder.Prompts.text(session, "At what price did you buy it?");
-    },
-    function(session, results) {
-      quotedPrice = results.response;
-      session.endDialog();
-    }
-  ]);
-
-  // Question 5.
-  bot.dialog("q5", [
-    function(session) {
-      builder.Prompts.text(session, "How many stocks did you buy?");
-    },
-    function(session, results) {
-      numStocks = results.response;
-      session.endDialog();
-    }
-  ]);
 
   // Can be used later to automatically retrieve information of user.
   bot.dialog('FetchMemberList', function(session) {
