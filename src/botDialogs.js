@@ -123,18 +123,15 @@ module.exports = (bot, builder, menuItems, buyOrSell, optionsGuidelines, workboo
   bot.dialog("sendGuidelines", [
     function(session) {
         session.send({
-            text: "Here you can read all about regulations:",
+            text: "Please read the guidelines below.",
             attachments: [{
                     contentType: "application/pdf",
-                    contentUrl: "C:/Users/levi.sallberg/Desktop/Atom/bot/compliance-bot/src/riktlinjer.pdf",
-                    name: "riktlinjer.pdf",
+                    contentUrl: "C:/Users/oskar.drugge/Desktop/Internt projekt - ComplianceBot/guidelines.pdf",
+                    name: "guidelines.pdf",
             }]
         });
-
     session.beginDialog("confirmGuidelines");
-
     }
-
   ]);
 
   // Confirm that user is following guidelines
