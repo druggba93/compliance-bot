@@ -30,53 +30,57 @@ module.exports.setup = function(app) {
   // We save information temporarily in the Bot storage memory
   var inMemoryBotStorage = new builder.MemoryBotStorage();
 
-  // The different types of dialogs to start
-  var dialogTypes = {
-    "Add new transaction": {
-      // Dialog q1
-      item: "addNew"
-    },
-    "Change existing transaction": {
-      // Dialog q2
-      item: "changeExisting"
-    }
-  };
-
   // The variables used to chose the wrong entries
   var menuItems = {
     "Name": {
-      // Dialog q1
-      item: "q1"
+      // User name
+      item: "userName"
     },
-    "SSN": {
-      // Dialog q2
-      item: "q2"
+    "Personal identification number": {
+      // PID
+      item: "pid"
     },
-    "Stock": {
-      // Dialog q3
-      item: "q3"
+    "Security": {
+      // Name of security
+      item: "security"
+    },
+    "Transaction date": {
+      // Transaction date
+      item: "transactionDate"
+    },
+    "Transaction type": {
+      // Transaction type
+      item: "type"
     },
     "Quoted price": {
-      // Dialog q4
-      item: "q4"
+      // Quoted price
+      item: "quotedPrice"
     },
-    "Number of stocks": {
-      // Dialog q5
-      item: "q5"
+    "Number of securities": {
+      // Number of securities
+      item: "numSecurities"
     }
   };
 
-
-
+  // Variables used to choose type of transaction
+  var buyOrSell = {
+    "Buy": {
+     // Buy
+     item: "Buy"
+    },
+    "Sell": {
+     item: "Sell"
+    }
+  }
 
   // Create the bot.
   var bot = new builder.UniversalBot(connector, [
     // function(session) {
     //   // Restart the confirmation dialog.
-    //   session.beginDialog("FetchMemberList");
+    //   session.beginDialog("fetchMemberList");
     // },
     // function(session) {
-    //   // Chose dialog
+    //   // Choose dialog
     //   builder.Prompts.choice(session, "What do you want to do? Type the entry or 1-" + Object.keys(dialogTypes).length + ":", dialogTypes);
     // },
     // function(session, results) {
@@ -84,34 +88,54 @@ module.exports.setup = function(app) {
     // }
     function(session) {
       // Restart the confirmation dialog.
-      session.beginDialog("addNew");
+      session.beginDialog("addNameAndPid");
+    },
+    function(session) {
+      // Add a security.
+      session.beginDialog("addSecurity")
     }
   ]).set('storage', inMemoryBotStorage); // Register in-memory storage
 
-    // Load functions from bot dialogs
-    botDialogs(bot, builder, menuItems, workbook, filename, sheetname, excelFunctions);
+  // Load functions from bot dialogs
+  botDialogs(bot, builder, menuItems, buyOrSell, workbook, filename, sheetname, excelFunctions);
 
-  // Add a new transactions
-  bot.dialog("addNew", [
+  // Add a new transaction
+  bot.dialog("addNameAndPid", [
     function(session) {
       // Begin name dialog
-      session.beginDialog("q1");
+      session.beginDialog("userName");
     },
     function(session) {
       // Begin SSN dialog
-      session.beginDialog("q2");
+      session.beginDialog("pid");
+    }
+  ]);
+
+  // Add security
+  bot.dialog("addSecurity", [
+    function(session) {
+      // Begin stock dialog
+      session.beginDialog("security");
     },
     function(session) {
       // Begin stock dialog
-      session.beginDialog("q3");
+      session.beginDialog("isin");
     },
     function(session) {
       // Begin quoted price dialog
-      session.beginDialog("q4");
+      session.beginDialog("transactionDate");
     },
     function(session) {
       // Begin number of stocks dialog
-      session.beginDialog("q5");
+      session.beginDialog("type");
+    },
+    function(session) {
+      // Begin number of stocks dialog
+      session.beginDialog("quotedPrice");
+    },
+    function(session) {
+      // Begin number of stocks dialog
+      session.beginDialog("numSecurities");
     },
     function(session) {
       // Begin confirmation dialog.
@@ -119,26 +143,25 @@ module.exports.setup = function(app) {
     }
   ]);
 
-  // Change existing transaction
-  bot.dialog("changeExisting", [
-    function(session) {
-      workbook.xlsx.readFile(filename)
-        .then(function() {
-          var worksheet = workbook.getWorksheet(sheetname);
-          // Iterate over all rows that have values in a worksheet
-          worksheet.eachRow(function(row, rowNumber) {
-            var rowValues = JSON.stringify(row.values);
-            //var rowValues = row.values;
-            console.log(rowValues[2]);
-            console.log('Row ' + rowNumber + ' = ' + rowValues);
-          });
-        })
-    }
+  // Continue or exit conversation
+  bot.dialog("continueOrExit", [
+        function(session) {
+          var msg = "Would you like to register more transactions? Please answer yes/no.";
+          builder.Prompts.confirm(session, msg);
+        },
+        function(session, args) {
+          if (args.response) {
+            session.beginDialog("addSecurity");
+          }
+          else {
+            session.send("Thank you. Have a great day!");
+            session.endConversation();
+          }
+        }
   ]);
 
-
   // Can be used later to automatically retrieve information of user.
-  bot.dialog('FetchMemberList', function(session) {
+  bot.dialog('fetchMemberList', function(session) {
     var conversationId = session.message.address.conversation.id;
     console.log(session.message);
     connector.fetchMembers(

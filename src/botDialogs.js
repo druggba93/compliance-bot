@@ -1,7 +1,7 @@
-module.exports = (bot, builder, menuItems, workbook, filename, sheetname, excelFunctions) => {
+module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetname, excelFunctions) => {
 
-    // Question 1.
-    bot.dialog("q1", [
+    // Full name of user
+    bot.dialog("userName", [
         function(session) {
             builder.Prompts.text(session, "Please type your full name.");
         },
@@ -11,63 +11,104 @@ module.exports = (bot, builder, menuItems, workbook, filename, sheetname, excelF
         }
     ]);
 
-    // Question 2.
-    bot.dialog("q2", [
+    // Personal identification number
+    bot.dialog("pid", [
         function(session) {
-          builder.Prompts.text(session, "What is your social security number (yyyymmdd-xxxx)?");
+          builder.Prompts.text(session, "What is your personal identification number (yyyymmdd-xxxx)?");
         },
         function(session, results) {
-            session.conversationData.ssn = results.response;
+            session.conversationData.pid = results.response;
             session.endDialog();
         }
     ]);
 
-    // Question 3.
-    bot.dialog("q3", [
-    function(session) {
-      builder.Prompts.text(session, "Which stock have you bought?");
-    },
-    function(session, results) {
-      session.conversationData.stock = results.response;
-      session.endDialog();
-    }
-  ]);
+    // Name of security
+    bot.dialog("security", [
+        function(session) {
+          builder.Prompts.text(session, "Please enter name of the security you traded.");
+        },
+        function(session, results) {
+          session.conversationData.security = results.response;
+          session.endDialog();
+        }
+    ]);
 
-  // Question 4.
-  bot.dialog("q4", [
-    function(session) {
-      builder.Prompts.text(session, "At what price did you buy it?");
-    },
-    function(session, results) {
-      session.conversationData.quotedPrice = results.response;
-      session.endDialog();
-    }
-  ]);
+    // ISIN
+    bot.dialog("isin", [
+        function(session) {
+          builder.Prompts.text(session, "Please enter ISIN number of " + session.conversationData.security + ".");
+        },
+        function(session, results) {
+          session.conversationData.isin = results.response;
+          session.endDialog();
+        }
+    ]);
 
-  // Question 5.
-  bot.dialog("q5", [
-    function(session) {
-      builder.Prompts.text(session, "How many stocks did you buy?");
-    },
-    function(session, results) {
-      session.conversationData.numStocks = results.response;
-      session.endDialog();
-    }
-  ]);
+    // Transaction date
+    bot.dialog("transactionDate", [
+        function(session) {
+          builder.Prompts.text(session, "When did the transaction take place (yyyy-mm-dd)?");
+        },
+        function(session, results) {
+          session.conversationData.transactionDate = results.response;
+          session.endDialog();
+        }
+    ]);
 
+    // Type of transaction
+    bot.dialog("type", [
+        function(session) {
+          builder.Prompts.choice(session, "Did you buy or sell " + session.conversationData.security + "?", buyOrSell);
+        },
+        function(session, results) {
+          session.conversationData.type =buyOrSell[results.response.entity].item;
+          session.endDialog();
+        }
+    ]);
 
-    // Confirm the results
+    // Price of security
+    bot.dialog("quotedPrice", [
+        function(session) {
+          var ending = "traded ";
+          if (session.conversationData.type.toLowerCase() == "buy") {
+            ending = "bought ";
+          } else if (session.conversationData.type.toLowerCase() == "sell") {
+            ending = "sold ";
+          }
+          builder.Prompts.text(session, "Please enter the price at which you " + ending + session.conversationData.security + ".");
+        },
+        function(session, results) {
+          session.conversationData.quotedPrice = results.response;
+          session.endDialog();
+        }
+    ]);
+
+     // Number of securities
+     bot.dialog("numSecurities", [
+        function(session) {
+          builder.Prompts.text(session, "How many " + session.conversationData.security + " did you " + session.conversationData.type.toLowerCase() + "?");
+        },
+        function(session, results) {
+          session.conversationData.numSecurities = results.response;
+          session.endDialog();
+        }
+     ]);
+
+  // Confirm the results
   bot.dialog("conf", [
     function(session) {
       // Print current entries
       var msg = "Transaction information" +
-        "\n\nName: " + session.conversationData.name +
-        "\n SSN: " + session.conversationData.ssn +
-        "\n Stock: " + session.conversationData.stock +
+        "\n\n Name: " + session.conversationData.name +
+        "\n Personal identification number: " + session.conversationData.pid +
+        "\n Name of security: " + session.conversationData.security +
+        "\n ISIN: " + session.conversationData.isin +
+        "\n Transaction date: " + session.conversationData.transactionDate +
+        "\n Type of transaction " + session.conversationData.type +
         "\n Quoted Price: " + session.conversationData.quotedPrice +
-        "\n Number of stocks: " + session.conversationData.numStocks +
-        "\n Transaction value: " + session.conversationData.quotedPrice * session.conversationData.numStocks +
-        "\n\nIs this the correct input? Please answer yes/no.";
+        "\n Number of securities: " + session.conversationData.numSecurities +
+        "\n Transaction value: " + session.conversationData.quotedPrice * session.conversationData.numSecurities +
+        "\n\n Is this the correct input? Please answer yes/no.";
       builder.Prompts.confirm(session, msg);
     },
     function(session, args) {
@@ -77,23 +118,23 @@ module.exports = (bot, builder, menuItems, workbook, filename, sheetname, excelF
           .then(function() {
             var worksheet = workbook.getWorksheet(sheetname);
             var row = worksheet.getRow(worksheet.rowCount + 1);
-            excelFunctions.addRow(session.conversationData.name, session.conversationData.ssn, session.conversationData.stock, session.conversationData.quotedPrice, session.conversationData.numStocks, row, worksheet);
+            excelFunctions.addRow(session.conversationData.name, session.conversationData.pid, session.conversationData.transactionDate, session.conversationData.type, session.conversationData.security, session.conversationData.isin, session.conversationData.quotedPrice, session.conversationData.numSecurities, row, worksheet);
             row.commit();
           })
           .then(function() {
-            session.send("Your information has been saved, have a great day!");
             return workbook.xlsx.writeFile(filename)
           }).catch(function(err) {
             var worksheet = workbook.addWorksheet(sheetname);
             var row = worksheet.getRow(2);
             excelFunctions.addHeaders(worksheet);
-            excelFunctions.addRow(session.conversationData.name, session.conversationData.ssn, session.conversationData.stock, session.conversationData.quotedPrice, session.conversationData.numStocks, row, worksheet);
+            excelFunctions.addRow(session.conversationData.name, session.conversationData.pid, session.conversationData.transactionDate, session.conversationData.type, session.conversationData.security, session.conversationData.isin, session.conversationData.quotedPrice, session.conversationData.numSecurities, row, worksheet);
             row.commit();
             workbook.xlsx.writeFile(filename)
-            session.send("Your information has been saved, have a great day!");
             console.log("-------Error was: " + err);
+          }).then(function() {
+              session.send("Your information has been saved.")
+              session.beginDialog("continueOrExit");
           });
-        session.endDialog();
       } else {
         // Choose wrong entry.
         builder.Prompts.choice(session, "Select entry to change (Type the entry or 1-" + Object.keys(menuItems).length + "):", menuItems);
@@ -108,8 +149,6 @@ module.exports = (bot, builder, menuItems, workbook, filename, sheetname, excelF
       session.beginDialog("conf");
     }
   ]);
-
-
 };
 
 
