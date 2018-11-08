@@ -30,7 +30,7 @@ module.exports.setup = function(app) {
     // We save information temporarily in the Bot storage memory
     var inMemoryBotStorage = new builder.MemoryBotStorage();
 
-    // The variables used to chose the wrong entries
+    // The variables used to choose the wrong entries
     var menuItems = {
         "Name": {
             // User name
@@ -72,7 +72,8 @@ module.exports.setup = function(app) {
             item: "Sell"
         }
     }
-    // The variables used to chose the wrong entries
+
+    // The variables used to choose to read guidelines or not
     var optionsGuidelines = {
         "Yes, I would like to read them": {
             // Dialog q1
@@ -84,22 +85,8 @@ module.exports.setup = function(app) {
         }
     };
 
-
-
-
     // Create the bot.
     var bot = new builder.UniversalBot(connector, [
-        // function(session) {
-        //   // Restart the confirmation dialog.
-        //   session.beginDialog("fetchMemberList");
-        // },
-        // function(session) {
-        //   // Choose dialog
-        //   builder.Prompts.choice(session, "What do you want to do? Type the entry or 1-" + Object.keys(dialogTypes).length + ":", dialogTypes);
-        // },
-        // function(session, results) {
-        //   session.beginDialog(dialogTypes[results.response.entity].item);
-        // }
         function(session) {
             // Restart the confirmation dialog.
             session.beginDialog("addNameAndPid");
@@ -132,7 +119,7 @@ module.exports.setup = function(app) {
             session.beginDialog("security");
         },
         function(session) {
-            // Begin stock dialog
+            // Begin isin dialog
             session.beginDialog("isin");
         },
         function(session) {
