@@ -72,6 +72,20 @@ module.exports.setup = function(app) {
      item: "Sell"
     }
   }
+  // The variables used to chose the wrong entries
+  var optionsGuidelines = {
+    "Yes, I would like to read them": {
+      // Dialog q1
+      item: "sendGuidelines"
+    },
+    "No, I know the guidelines": {
+      // Dialog q2
+      item: "confirmGuidelines"
+    }
+  };
+
+
+
 
   // Create the bot.
   var bot = new builder.UniversalBot(connector, [
@@ -97,7 +111,7 @@ module.exports.setup = function(app) {
   ]).set('storage', inMemoryBotStorage); // Register in-memory storage
 
   // Load functions from bot dialogs
-  botDialogs(bot, builder, menuItems, buyOrSell, workbook, filename, sheetname, excelFunctions);
+  botDialogs(bot, builder, menuItems, buyOrSell, optionsGuidelines, workbook, filename, sheetname, excelFunctions);
 
   // Add a new transaction
   bot.dialog("addNameAndPid", [

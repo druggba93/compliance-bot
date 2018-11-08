@@ -27,14 +27,14 @@
         "entityId": "com.contoso.helloworld.hellotab",
         "name": "Hello Tab",
         "contentUrl": "http://localhost:3333/hello",
-        //"contentUrl": "https://ce06b94c.ngrok.io/hello",
+        //"contentUrl": "https://ebae574d.ngrok.io/hello",
         "scopes": [
             "personal"
         ]
     }],
     "configurableTabs": [{
         "configurationUrl": "http://localhost:3333/second/configure",
-        //"configurationUrl": "https://ce06b94c.ngrok.io/configure",
+        //"configurationUrl": "https://ebae574d.ngrok.io/configure",
         "canUpdateConfiguration": true,
         "scopes": [
             "team"
@@ -44,6 +44,7 @@
         "botId": "3a2e6856-f4a3-4a10-b1e4-7b5eb7b6ff61",
         "needsChannelSelector": false,
         "isNotificationOnly": false,
+        "supportsFiles": true,
         "scopes": [
             "team",
             "personal"

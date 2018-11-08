@@ -1,4 +1,4 @@
-module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetname, excelFunctions) => {
+module.exports = (bot, builder, menuItems, buyOrSell, optionsGuidelines, workbook, filename, sheetname, excelFunctions) => {
 
     // Full name of user
     bot.dialog("userName", [
@@ -94,6 +94,91 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
         }
      ]);
 
+  // Change entry
+  bot.dialog("changeAnswer", [
+    function(session) {
+      builder.Prompts.choice(session, "Select entry to change (Type the entry or 1-" + Object.keys(menuItems).length + "):", menuItems);
+    },
+    function(session, results) {
+      // If not correct input.
+      session.beginDialog(menuItems[results.response.entity].item);
+    },
+    function(session) {
+      // Restart the confirmation dialog.
+      session.beginDialog("conf");
+    }
+  ]);
+
+  // Confirm knowing the guidelines
+  bot.dialog("confirmKnowingGuideLines", [
+    function(session) {
+      builder.Prompts.choice(session, "Do you know the FCG guidelines of employee's transactions in financial instruments or would you like to read them?", optionsGuidelines);
+    },
+    function(session, results) {
+      session.beginDialog(optionsGuidelines[results.response.entity].item);
+    }
+  ]);
+
+  // Send guidelines to user
+  bot.dialog("sendGuidelines", [
+    function(session) {
+        session.send({
+            text: "Here you can read all about regulations:",
+            attachments: [{
+                    contentType: "application/pdf",
+                    contentUrl: "C:/Users/levi.sallberg/Desktop/Atom/bot/compliance-bot/src/riktlinjer.pdf",
+                    name: "riktlinjer.pdf",
+            }]
+        });
+
+    session.beginDialog("confirmGuidelines");
+
+    }
+
+  ]);
+
+  // Confirm that user is following guidelines
+  bot.dialog("confirmGuidelines", [
+    function(session) {
+      builder.Prompts.confirm(session, "Does the transaction follow the FCG guidelines? Please answer 'yes' or 'no'.");
+    },
+    function(session, args) {
+        if (args.response) {
+            session.beginDialog("saveToExcel");
+        } else {
+            session.send("Please contact the HR department or re-enter any question you answered incorrectly.");
+            session.beginDialog("conf");
+        }
+    }
+  ]);
+
+  // Save to excel
+  bot.dialog("saveToExcel", [
+    function(session) {
+        workbook.xlsx.readFile(filename)
+          .then(function() {
+            var worksheet = workbook.getWorksheet(sheetname);
+            var row = worksheet.getRow(worksheet.rowCount + 1);
+            excelFunctions.addRow(session.conversationData.name, session.conversationData.pid, session.conversationData.transactionDate, session.conversationData.type, session.conversationData.security, session.conversationData.isin, session.conversationData.quotedPrice, session.conversationData.numSecurities, row, worksheet);
+            row.commit();
+          })
+          .then(function() {
+            return workbook.xlsx.writeFile(filename)
+          }).catch(function(err) {
+            var worksheet = workbook.addWorksheet(sheetname);
+            var row = worksheet.getRow(2);
+            excelFunctions.addHeaders(worksheet);
+            excelFunctions.addRow(session.conversationData.name, session.conversationData.pid, session.conversationData.transactionDate, session.conversationData.type, session.conversationData.security, session.conversationData.isin, session.conversationData.quotedPrice, session.conversationData.numSecurities, row, worksheet);
+            row.commit();
+            workbook.xlsx.writeFile(filename)
+            console.log("-------Error was: " + err);
+          }).then(function() {
+            session.send("Your information has been saved.")
+            session.beginDialog("continueOrExit");
+          });
+    }
+  ]);
+
   // Confirm the results
   bot.dialog("conf", [
     function(session) {
@@ -114,39 +199,11 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
     function(session, args) {
       // If correct input
       if (args.response) {
-        workbook.xlsx.readFile(filename)
-          .then(function() {
-            var worksheet = workbook.getWorksheet(sheetname);
-            var row = worksheet.getRow(worksheet.rowCount + 1);
-            excelFunctions.addRow(session.conversationData.name, session.conversationData.pid, session.conversationData.transactionDate, session.conversationData.type, session.conversationData.security, session.conversationData.isin, session.conversationData.quotedPrice, session.conversationData.numSecurities, row, worksheet);
-            row.commit();
-          })
-          .then(function() {
-            return workbook.xlsx.writeFile(filename)
-          }).catch(function(err) {
-            var worksheet = workbook.addWorksheet(sheetname);
-            var row = worksheet.getRow(2);
-            excelFunctions.addHeaders(worksheet);
-            excelFunctions.addRow(session.conversationData.name, session.conversationData.pid, session.conversationData.transactionDate, session.conversationData.type, session.conversationData.security, session.conversationData.isin, session.conversationData.quotedPrice, session.conversationData.numSecurities, row, worksheet);
-            row.commit();
-            workbook.xlsx.writeFile(filename)
-            console.log("-------Error was: " + err);
-          }).then(function() {
-              session.send("Your information has been saved.")
-              session.beginDialog("continueOrExit");
-          });
+        session.beginDialog("confirmKnowingGuideLines")
       } else {
         // Choose wrong entry.
-        builder.Prompts.choice(session, "Select entry to change (Type the entry or 1-" + Object.keys(menuItems).length + "):", menuItems);
+        session.beginDialog("changeAnswer");
       }
-    },
-    function(session, results) {
-      // If not correct input.
-      session.beginDialog(menuItems[results.response.entity].item);
-    },
-    function(session) {
-      // Restart the confirmation dialog.
-      session.beginDialog("conf");
     }
   ]);
 };
