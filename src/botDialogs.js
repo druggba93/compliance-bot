@@ -127,7 +127,8 @@ module.exports = (bot, builder, menuItems, buyOrSell, optionsGuidelines, workboo
                 attachments: [{
                     contentType: "application/pdf",
                     //contentUrl: "C:/Users/oskar.drugge/Desktop/Internt projekt - ComplianceBot/guidelines.pdf",
-                    contentUrl: "C:/Users/levi.sallberg/Desktop/Atom/bot/compliance-bot/src/guidelines.pdf",
+                    //contentUrl: "C:/Users/levi.sallberg/Desktop/Atom/bot/compliance-bot/src/guidelines.pdf",
+                    contentUrl: __dirname + "\\guidelines.pdf",
                     name: "guidelines.pdf",
                 }]
             });
