@@ -12,7 +12,7 @@ module.exports.setup = function(app) {
 
   // Setup excel file
   var workbook = new excel.Workbook(); // Create a new instance of a Workbook class
-  const filename = "transactions.xlsx"; // Name of excel-file
+  const filename = "C:/test/transactions.xlsx"; // Name of excel-file
   const sheetname = "Transactions"; // Sheetname
 
   // Get bot info from config file
@@ -66,6 +66,18 @@ module.exports.setup = function(app) {
     }
   };
 
+  // The variables used to chose the wrong entries
+  var optionsGuidelines = {
+    "Yes, I would like to read them": {
+      // Dialog q1
+      item: "sendGuidelines"
+    },
+    "No, I know the guidelines": {
+      // Dialog q2
+      item: "confirmGuidelines"
+    }
+  };
+
 
 
 
@@ -89,7 +101,7 @@ module.exports.setup = function(app) {
   ]).set('storage', inMemoryBotStorage); // Register in-memory storage
 
     // Load functions from bot dialogs
-    botDialogs(bot, builder, menuItems, workbook, filename, sheetname, excelFunctions);
+    botDialogs(bot, builder, menuItems, optionsGuidelines, workbook, filename, sheetname, excelFunctions);
 
   // Add a new transactions
   bot.dialog("addNew", [
