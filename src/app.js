@@ -1,6 +1,9 @@
 'use strict';
 
+// Requred modules
 var express = require('express');
+
+// Express application
 var app = express();
 
 // Adding tabs to our app. This will setup routes to various views

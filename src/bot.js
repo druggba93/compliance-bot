@@ -1,5 +1,6 @@
 'use strict';
 
+// Bot code
 module.exports.setup = function(app) {
 
     // Required modules and functions
@@ -12,9 +13,9 @@ module.exports.setup = function(app) {
     var validators = require('./validators');
 
     // Setup excel file
-    var workbook = new excel.Workbook(); // Create a new instance of a Workbook class
-    const filename = "transactions.xlsx"; // Name of excel-file
-    const sheetname = "Transactions"; // Sheetname
+    var workBook = new excel.Workbook(); // Create a new instance of a Workbook class
+    const fileName = "transactions.xlsx"; // Name of excel-file
+    const sheetName = "Transactions"; // Sheetname
 
     // Get bot info from config file
     var botConfig = config.get('bot');
@@ -70,24 +71,25 @@ module.exports.setup = function(app) {
             item: "Buy"
         },
         "Sell": {
+            // Sell
             item: "Sell"
         }
-    }
+    };
 
-    // Create the bot.
+    // Create the bot
     var bot = new builder.UniversalBot(connector, [
         function(session) {
-            // Restart the confirmation dialog.
+            // Register user name and personal identification number
             session.beginDialog("addNameAndPid");
         },
         function(session) {
-            // Add a security.
+            // Add a security (e.g. a stock)
             session.beginDialog("addSecurity")
         }
     ]).set('storage', inMemoryBotStorage); // Register in-memory storage
 
     // Load functions from bot dialogs
-    botDialogs(bot, builder, menuItems, buyOrSell, workbook, filename, sheetname, excelFunctions, validators);
+    botDialogs(bot, builder, menuItems, buyOrSell, workBook, fileName, sheetName, excelFunctions, validators);
 
     // Welcome message when chat starts
     bot.on('conversationUpdate', function(message) {

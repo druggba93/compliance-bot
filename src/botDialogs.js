@@ -1,18 +1,22 @@
-module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetname, excelFunctions, validators) => {
+module.exports = (bot, builder, menuItems, buyOrSell, workBook, fileName, sheetName, excelFunctions, validators) => {
 
     // Full name of user
     bot.dialog("userName", [
         function(session, args) {
+            // Invalid entry
             if (args && args.reprompt) {
                 builder.Prompts.text(session, "Invalid name. Please re-type your name (remember to not add a space after the name).");
+            // First entry
             } else {
                 builder.Prompts.text(session, "Please type your full name.");
             }
         },
         function(session, results) {
+            // Valid entry
             if (validators.isName(results.response)) {
                 session.conversationData.name = results.response;
                 session.endDialog();
+            // Invalid entry
             } else {
                 session.replaceDialog("userName", { reprompt: true });
             }
@@ -22,16 +26,20 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
     // Personal identification number
     bot.dialog("pid", [
         function(session, args) {
+            // Invalid entry
             if (args && args.reprompt) {
                 builder.Prompts.text(session, "Invalid number. Please enter your personal identification number on the format yyyymmdd-xxxx.");
+            // First entry
             } else {
                 builder.Prompts.text(session, "What is your personal identification number (yyyymmdd-xxxx)?")
             }
         },
         function(session, results) {
+            // Valid entry
             if (validators.isSwedishPid(results.response)) {
                 session.conversationData.pid = results.response;
                 session.endDialog();
+             // Invalid entry
              } else {
                 session.replaceDialog("pid", { reprompt: true });
              }
@@ -52,16 +60,20 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
     // ISIN
     bot.dialog("isin", [
         function(session, args) {
+            // Invalid entry
             if (args && args.reprompt) {
                 builder.Prompts.text(session, "Invalid ISIN number. Please enter a valid number.");
+            // First entry
             } else {
                 builder.Prompts.text(session, "Please enter ISIN number of " + session.conversationData.security + ".")
             }
         },
         function(session, results) {
+            // Valid entry
             if (validators.isValidIsin(results.response)) {
                 session.conversationData.isin = results.response;
                 session.endDialog();
+            // Invalid entry
             } else {
                 session.replaceDialog("isin", { reprompt: true });
             }
@@ -71,17 +83,21 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
     // Transaction date
     bot.dialog("transactionDate", [
         function(session, args) {
+            // Invalid entry
             if (args && args.reprompt) {
                 builder.Prompts.text(session, "Invalid date. Please enter a valid date on the format yyyy-mm-dd.")
+            // First entry
             } else {
                 builder.Prompts.text(session, "When did the transaction take place (yyyy-mm-dd)?");
 
             }
         },
         function(session, results) {
+            // Valid entry
             if (validators.isValidDate(results.response)) {
                 session.conversationData.transactionDate = results.response;
                 session.endDialog();
+            // Invalid entry
             } else {
                 session.replaceDialog("transactionDate", { reprompt: true });
             }
@@ -102,22 +118,27 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
     // Price of security
     bot.dialog("quotedPrice", [
         function(session, args) {
+            // Invalid entry
             if (args && args.reprompt) {
                builder.Prompts.text(session, "Invalid price. Please enter a valid number.");
+            // First entry
             } else {
-                var ending = "traded ";
+                // Interactive text depending on if user bought or sold
+                var msg = "traded ";
                 if (session.conversationData.type.toLowerCase() == "buy") {
-                    ending = "bought ";
+                    msg = "bought ";
                 } else if (session.conversationData.type.toLowerCase() == "sell") {
-                    ending = "sold ";
+                    msg = "sold ";
                 }
-                builder.Prompts.text(session, "Please enter the price at which you " + ending + session.conversationData.security + ".");
+                builder.Prompts.text(session, "Please enter the price at which you " + msg + session.conversationData.security + ".");
             }
         },
         function(session, results) {
+            // Valid entry
             if (validators.isValidPrice(results.response)) {
                 session.conversationData.quotedPrice = results.response;
                 session.endDialog();
+            // Invalid entry
             } else {
                 session.replaceDialog("quotedPrice", { reprompt: true });
             }
@@ -127,16 +148,20 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
     // Number of securities
     bot.dialog("numSecurities", [
         function(session, args) {
+            // Invalid entry
             if (args && args.reprompt) {
                 builder.Prompts.text(session, "Invalid number. Please enter a whole number.");
+            // First entry
             } else {
                 builder.Prompts.text(session, "How many " + session.conversationData.security + " did you " + session.conversationData.type.toLowerCase() + "?");
             }
         },
         function(session, results) {
+            // Valid entry
             if (validators.isValidNumber(results.response)) {
                 session.conversationData.numSecurities = results.response;
                 session.endDialog();
+            // Invalid entry
             } else {
                 session.replaceDialog("numSecurities", { reprompt: true });
             }
@@ -145,34 +170,38 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
 
     // Change entry
     bot.dialog("changeAnswer", [
+        // User selects which entry to change
         function(session) {
             builder.Prompts.choice(session, "Select entry to change (Type the entry or 1-" + Object.keys(menuItems).length + "):", menuItems);
         },
+        // Change entry
         function(session, results) {
             // If not correct input.
             session.beginDialog(menuItems[results.response.entity].item);
         },
+        // Restart confirmation dialog
         function(session) {
-            // Restart the confirmation dialog.
             session.beginDialog("conf");
         }
     ]);
 
-    // Ask is the user would like to read the guidelines.
+    // Ask is the user would like to read the guidelines
     bot.dialog("promptReadGuidelines", [
         function(session) {
             builder.Prompts.confirm(session, "Would you like to read the guidelines? Please answer 'yes' or 'no'.");
         },
         function(session, args) {
+            // Read guidelines
             if (args.response) {
                 session.beginDialog("sendGuidelines");
+            // Do not read guidelines
             } else {
                 session.endDialog()
             }
         }
     ]);
 
-    // Send guidelines to user
+    // Send guidelines to user on pdf format
     bot.dialog("sendGuidelines", [
         function(session) {
             session.send({
@@ -193,8 +222,10 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
             builder.Prompts.confirm(session, "Does the transaction follow FCG guidelines? Please answer 'yes' or 'no'.");
         },
         function(session, args) {
+            // User confirms that he/she follows the guidelines
             if (args.response) {
                 session.beginDialog("saveToExcel");
+            // User does not confirm that he/she follows the guidelines
             } else {
                 session.send("Please contact the HR department. Have a great day!");
                 session.endConversation();
@@ -202,7 +233,7 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
         }
     ]);
 
-    // Add a new transaction
+    // Add name and personal identification number
     bot.dialog("addNameAndPid", [
         function(session) {
             // Reset array with all transactions in current session
@@ -223,29 +254,30 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
     // Save to excel
     bot.dialog("saveToExcel", [
         function(session) {
-            workbook.xlsx.readFile(filename)
+            workBook.xlsx.readFile(fileName)
                 .then(function() {
                     // Try to open excel
-                    var worksheet = workbook.getWorksheet(sheetname);
+                    var workSheet = workBook.getWorksheet(sheetName);
                 })
                 .catch(function(err) {
                     // Catch file not found (+ other errors. Should be fixed)
                     console.log("Missing excel file. Adding file!");
-                    var worksheet = workbook.addWorksheet(sheetname);
-                    excelFunctions.addHeaders(worksheet);
-                    workbook.xlsx.writeFile(filename)
+                    var workSheet = workBook.addWorksheet(sheetName);
+                    excelFunctions.addHeaders(workSheet);
+                    workBook.xlsx.writeFile(fileName)
                 })
                 .then(function() {
                     // Open excel and add row
-                    var worksheet = workbook.getWorksheet(sheetname);
+                    var workSheet = workBook.getWorksheet(sheetName);
                     for (i = 0; i < session.conversationData.dataArray.length; i++){
-                        var row = worksheet.getRow(worksheet.rowCount + 1);
+                        var row = workSheet.getRow(workSheet.rowCount + 1);
                         excelFunctions.addRow(row, session.conversationData.dataArray[i]);
                         row.commit();
-                        workbook.xlsx.writeFile(filename)
+                        workBook.xlsx.writeFile(fileName)
                     }
                 })
                 .then(function() {
+                    // End conversation
                     session.send("Thank you. Have a great day!");
                     session.endConversation();
                 });
@@ -263,23 +295,23 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
             session.beginDialog("isin");
         },
         function(session) {
-            // Begin quoted price dialog
+            // Begin transaction date dialog
             session.beginDialog("transactionDate");
         },
         function(session) {
-            // Begin number of stocks dialog
+            // Begin transaction type dialog
             session.beginDialog("type");
         },
         function(session) {
-            // Begin number of stocks dialog
+            // Begin quoted price dialog
             session.beginDialog("quotedPrice");
         },
         function(session) {
-            // Begin number of stocks dialog
+            // Begin number of securities dialog
             session.beginDialog("numSecurities");
         },
         function(session) {
-            // Begin confirmation dialog.
+            // Begin confirmation dialog
             session.beginDialog("conf");
         }
     ]);
@@ -291,15 +323,17 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
             builder.Prompts.confirm(session, msg);
         },
         function(session, args) {
+            // Add another security transaction
             if (args.response) {
                 session.beginDialog("addSecurity");
+            // User done, proceed to confirm guidelines
             } else {
                 session.beginDialog("confirmGuidelines");
             }
         }
     ]);
 
-    // Can be used later to automatically retrieve information of user.
+    // Can be used to automatically retrieve information of user
     bot.dialog('fetchMemberList', function(session) {
         var conversationId = session.message.address.conversation.id;
         console.log(session.message);
@@ -338,8 +372,8 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
             if (args.response) {
                 session.conversationData.dataArray.push([session.conversationData.name, session.conversationData.pid, session.conversationData.transactionDate, session.conversationData.type, session.conversationData.security, session.conversationData.isin, session.conversationData.quotedPrice, session.conversationData.numSecurities])
                 session.beginDialog("continueOrExit")
+            // Choose wrong entry
             } else {
-                // Choose wrong entry.
                 session.beginDialog("changeAnswer");
             }
         }
@@ -347,7 +381,8 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
 
     // End conversation when user types 'exit'
     bot.dialog('reset', function (session) {
-    // reset data
-    session.endConversation("Goodbye! Welcome back another time.");
+        // reset data
+        session.endConversation("Goodbye! Welcome back another time.");
     }).triggerAction({ matches: /^exit/i });
+
 };

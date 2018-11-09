@@ -1,4 +1,9 @@
 module.exports = {
+    /**
+    * Add headers to first row in excel file
+    * @ param {Excel Worksheet} workSheet: An excel worksheet
+    * @ return nothing
+    **/
     addHeaders: function(worksheet) {
         var row = worksheet.getRow(1);
         row.getCell(1).value = "Registered at";
@@ -12,6 +17,12 @@ module.exports = {
         row.getCell(9).value = "Number";
         row.getCell(10).value = "Transaction value";
     },
+    /**
+    * Add a row of values to excel file
+    * @ param {Excel Row} row: A row in an excel worksheet
+    * @ param {Array} dataArray: An array containing transaction information
+    * @ return nothing
+    **/
     addRow: function(row, dataArray) {
         row.getCell(1).value = new Date();
         row.getCell(2).value = dataArray[0]; //name;
