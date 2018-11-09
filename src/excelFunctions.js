@@ -22,6 +22,6 @@ module.exports = {
         row.getCell(7).value = dataArray[5] // type;
         row.getCell(8).value = dataArray[6] // quotedPrice;
         row.getCell(9).value = dataArray[7] // numSecurities;
-        row.getCell(10).value = dataArray[6] * rowArray[7] // quotedPrice * numSecurities;
+        row.getCell(10).value = dataArray[6] * dataArray[7] // quotedPrice * numSecurities;
     }
 };

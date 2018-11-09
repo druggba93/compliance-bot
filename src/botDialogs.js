@@ -189,8 +189,6 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
                 .then(function() {
                     // Open excel and add row
                     var worksheet = workbook.getWorksheet(sheetname);
-                    console.log("===============================")
-                    console.log(session.conversationData.dataArray)
                     for (i = 0; i < session.conversationData.dataArray.length; i++){
                         var row = worksheet.getRow(worksheet.rowCount + 1);
                         excelFunctions.addRow(row, session.conversationData.dataArray[i]);
@@ -290,8 +288,6 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
             // If correct input
             if (args.response) {
                 session.conversationData.dataArray.push([session.conversationData.name, session.conversationData.pid, session.conversationData.transactionDate, session.conversationData.type, session.conversationData.security, session.conversationData.isin, session.conversationData.quotedPrice, session.conversationData.numSecurities])
-                console.log("===============================")
-                console.log(session.conversationData.dataArray)
                 session.beginDialog("continueOrExit")
             } else {
                 // Choose wrong entry.
