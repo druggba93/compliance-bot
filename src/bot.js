@@ -9,6 +9,7 @@ module.exports.setup = function(app) {
     var excel = require('exceljs');
     var excelFunctions = require('./excelFunctions');
     var botDialogs = require('./botDialogs');
+    var validators = require('./validators');
 
     // Setup excel file
     var workbook = new excel.Workbook(); // Create a new instance of a Workbook class
@@ -86,7 +87,7 @@ module.exports.setup = function(app) {
     ]).set('storage', inMemoryBotStorage); // Register in-memory storage
 
     // Load functions from bot dialogs
-    botDialogs(bot, builder, menuItems, buyOrSell, workbook, filename, sheetname, excelFunctions);
+    botDialogs(bot, builder, menuItems, buyOrSell, workbook, filename, sheetname, excelFunctions, validators);
 
     // Welcome message when chat starts
     bot.on('conversationUpdate', function(message) {
@@ -95,7 +96,7 @@ module.exports.setup = function(app) {
                 if (identity.id === message.address.bot.id) {
                     bot.send(new builder.Message()
                         .address(message.address)
-                        .text("Hi, I am the compliance bot! Here you can register your financial transactions. Please type 'start' and press enter to continue."));
+                        .text("Hi, I am the compliance bot! Here you can register your financial transactions. Please type anything and then press enter to continue."));
                 }
             });
         }

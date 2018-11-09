@@ -1,24 +1,40 @@
-module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetname, excelFunctions) => {
+module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetname, excelFunctions, validators) => {
 
     // Full name of user
     bot.dialog("userName", [
-        function(session) {
-            builder.Prompts.text(session, "Please type your full name.");
+        function(session, args) {
+            if (args && args.reprompt) {
+                builder.Prompts.text(session, "Invalid name. Please re-type your name (remember to not add a space after the name).");
+            } else {
+                builder.Prompts.text(session, "Please type your full name.");
+            }
         },
         function(session, results) {
-            session.conversationData.name = results.response;
-            session.endDialog();
+            if (validators.isName(results.response)) {
+                session.conversationData.name = results.response;
+                session.endDialog();
+            } else {
+                session.replaceDialog("userName", { reprompt: true });
+            }
         }
     ]);
 
     // Personal identification number
     bot.dialog("pid", [
-        function(session) {
-            builder.Prompts.text(session, "What is your personal identification number (yyyymmdd-xxxx)?");
+        function(session, args) {
+            if (args && args.reprompt) {
+                builder.Prompts.text(session, "Invalid number. Please enter your personal identification number on the format yyyymmdd-xxxx.");
+            } else {
+                builder.Prompts.text(session, "What is your personal identification number (yyyymmdd-xxxx)?")
+            }
         },
         function(session, results) {
-            session.conversationData.pid = results.response;
-            session.endDialog();
+            if (validators.isSwedishPid(results.response)) {
+                session.conversationData.pid = results.response;
+                session.endDialog();
+             } else {
+                session.replaceDialog("pid", { reprompt: true });
+             }
         }
     ]);
 
@@ -35,23 +51,40 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
 
     // ISIN
     bot.dialog("isin", [
-        function(session) {
-            builder.Prompts.text(session, "Please enter ISIN number of " + session.conversationData.security + ".");
+        function(session, args) {
+            if (args && args.reprompt) {
+                builder.Prompts.text(session, "Invalid ISIN number. Please enter a valid number.");
+            } else {
+                builder.Prompts.text(session, "Please enter ISIN number of " + session.conversationData.security + ".")
+            }
         },
         function(session, results) {
-            session.conversationData.isin = results.response;
-            session.endDialog();
+            if (validators.isValidIsin(results.response)) {
+                session.conversationData.isin = results.response;
+                session.endDialog();
+            } else {
+                session.replaceDialog("isin", { reprompt: true });
+            }
         }
     ]);
 
     // Transaction date
     bot.dialog("transactionDate", [
-        function(session) {
-            builder.Prompts.text(session, "When did the transaction take place (yyyy-mm-dd)?");
+        function(session, args) {
+            if (args && args.reprompt) {
+                builder.Prompts.text(session, "Invalid date. Please enter a valid date on the format yyyy-mm-dd.")
+            } else {
+                builder.Prompts.text(session, "When did the transaction take place (yyyy-mm-dd)?");
+
+            }
         },
         function(session, results) {
-            session.conversationData.transactionDate = results.response;
-            session.endDialog();
+            if (validators.isValidDate(results.response)) {
+                session.conversationData.transactionDate = results.response;
+                session.endDialog();
+            } else {
+                session.replaceDialog("transactionDate", { reprompt: true });
+            }
         }
     ]);
 
@@ -68,29 +101,45 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
 
     // Price of security
     bot.dialog("quotedPrice", [
-        function(session) {
-            var ending = "traded ";
-            if (session.conversationData.type.toLowerCase() == "buy") {
-                ending = "bought ";
-            } else if (session.conversationData.type.toLowerCase() == "sell") {
-                ending = "sold ";
+        function(session, args) {
+            if (args && args.reprompt) {
+               builder.Prompts.text(session, "Invalid price. Please enter a valid number.");
+            } else {
+                var ending = "traded ";
+                if (session.conversationData.type.toLowerCase() == "buy") {
+                    ending = "bought ";
+                } else if (session.conversationData.type.toLowerCase() == "sell") {
+                    ending = "sold ";
+                }
+                builder.Prompts.text(session, "Please enter the price at which you " + ending + session.conversationData.security + ".");
             }
-            builder.Prompts.text(session, "Please enter the price at which you " + ending + session.conversationData.security + ".");
         },
         function(session, results) {
-            session.conversationData.quotedPrice = results.response;
-            session.endDialog();
+            if (validators.isValidPrice(results.response)) {
+                session.conversationData.quotedPrice = results.response;
+                session.endDialog();
+            } else {
+                session.replaceDialog("quotedPrice", { reprompt: true });
+            }
         }
     ]);
 
     // Number of securities
     bot.dialog("numSecurities", [
-        function(session) {
-            builder.Prompts.text(session, "How many " + session.conversationData.security + " did you " + session.conversationData.type.toLowerCase() + "?");
+        function(session, args) {
+            if (args && args.reprompt) {
+                builder.Prompts.text(session, "Invalid number. Please enter a whole number.");
+            } else {
+                builder.Prompts.text(session, "How many " + session.conversationData.security + " did you " + session.conversationData.type.toLowerCase() + "?");
+            }
         },
         function(session, results) {
-            session.conversationData.numSecurities = results.response;
-            session.endDialog();
+            if (validators.isValidNumber(results.response)) {
+                session.conversationData.numSecurities = results.response;
+                session.endDialog();
+            } else {
+                session.replaceDialog("numSecurities", { reprompt: true });
+            }
         }
     ]);
 
@@ -277,7 +326,7 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
                 "\n Type of transaction " + session.conversationData.type +
                 "\n Quoted Price: " + session.conversationData.quotedPrice +
                 "\n Number of securities: " + session.conversationData.numSecurities +
-                "\n Transaction value: " + session.conversationData.quotedPrice * session.conversationData.numSecurities +
+                "\n Transaction value: " + session.conversationData.quotedPrice.replace(',', '.') * session.conversationData.numSecurities +
                 "\n\n Is this the correct information? Please answer 'yes' or 'no'.";
             builder.Prompts.confirm(session, msg);
         },

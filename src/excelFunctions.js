@@ -22,6 +22,6 @@ module.exports = {
         row.getCell(7).value = type;
         row.getCell(8).value = quotedPrice;
         row.getCell(9).value = numSecurities;
-        row.getCell(10).value = quotedPrice * numSecurities;
+        row.getCell(10).value = quotedPrice.replace(',', '.') * numSecurities;
     }
 };
