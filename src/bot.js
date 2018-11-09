@@ -96,7 +96,7 @@ module.exports.setup = function(app) {
                 if (identity.id === message.address.bot.id) {
                     bot.send(new builder.Message()
                         .address(message.address)
-                        .text("Hi, I am the compliance bot! Here you can register your financial transactions. Please type anything and then press enter to continue."));
+                        .text("Hi, I am the compliance bot! Here you can register your financial transactions. Please type anything and then press enter to continue. \n\n If you would like to exit at any point, type 'exit' and press enter."));
                 }
             });
         }

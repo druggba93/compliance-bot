@@ -344,4 +344,10 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
             }
         }
     ]);
+
+    // End conversation when user types 'exit'
+    bot.dialog('reset', function (session) {
+    // reset data
+    session.endConversation("Goodbye! Welcome back another time.");
+    }).triggerAction({ matches: /^exit/i });
 };
