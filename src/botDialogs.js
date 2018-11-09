@@ -127,7 +127,7 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
     bot.dialog("sendGuidelines", [
         function(session) {
             session.send({
-                text: "Please read the guidelines below.",
+                text: "Here you go. Read the guidelines below.",
                 attachments: [{
                     contentType: "application/pdf",
                     //contentUrl: "C:/Users/oskar.drugge/Desktop/Internt projekt - ComplianceBot/guidelines.pdf",
@@ -144,7 +144,7 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
     // Confirm that user is following guidelines
     bot.dialog("confirmGuidelines", [
         function(session) {
-            builder.Prompts.confirm(session, "Does the transaction follow the FCG guidelines? Please answer 'yes' or 'no'.");
+            builder.Prompts.confirm(session, "Does the transaction follow FCG guidelines? Please answer 'yes' or 'no'.");
         },
         function(session, args) {
             if (args.response) {
@@ -234,7 +234,7 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
     // Continue or exit conversation
     bot.dialog("continueOrExit", [
         function(session) {
-            var msg = "Would you like to register more transactions? Please answer yes/no.";
+            var msg = "Would you like to register more transactions? Please answer 'yes' or 'no'.";
             builder.Prompts.confirm(session, msg);
         },
         function(session, args) {
@@ -256,7 +256,7 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
             conversationId,
             (err, result) => {
                 if (err) {
-                    session.endDialog('There is some error');
+                    session.endDialog('Oops, something went wrong.');
                 } else {
                     session.endDialog('%s', JSON.stringify(result));
                 }
@@ -278,7 +278,7 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
                 "\n Quoted Price: " + session.conversationData.quotedPrice +
                 "\n Number of securities: " + session.conversationData.numSecurities +
                 "\n Transaction value: " + session.conversationData.quotedPrice * session.conversationData.numSecurities +
-                "\n\n Is this the correct input? Please answer yes/no.";
+                "\n\n Is this the correct information? Please answer 'yes' or 'no'.";
             builder.Prompts.confirm(session, msg);
         },
         function(session, args) {
