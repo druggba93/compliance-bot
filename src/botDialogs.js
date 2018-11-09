@@ -1,4 +1,4 @@
-module.exports = (bot, builder, menuItems, buyOrSell, optionsGuidelines, workbook, filename, sheetname, excelFunctions) => {
+module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetname, excelFunctions) => {
 
     // Full name of user
     bot.dialog("userName", [
@@ -109,13 +109,17 @@ module.exports = (bot, builder, menuItems, buyOrSell, optionsGuidelines, workboo
         }
     ]);
 
-    // Confirm knowing the guidelines
-    bot.dialog("confirmKnowingGuideLines", [
+    // Ask is the user would like to read the guidelines.
+    bot.dialog("promptReadGuidelines", [
         function(session) {
-            builder.Prompts.choice(session, "Do you know the FCG guidelines of employee's transactions in financial instruments or would you like to read them?", optionsGuidelines);
+            builder.Prompts.confirm(session, "Would you like to read the guidelines? Please answer 'yes' or 'no'.");
         },
-        function(session, results) {
-            session.beginDialog(optionsGuidelines[results.response.entity].item);
+        function(session, args) {
+            if (args.response) {
+                session.beginDialog("sendGuidelines");
+            } else {
+                session.endDialog()
+            }
         }
     ]);
 
@@ -132,7 +136,8 @@ module.exports = (bot, builder, menuItems, buyOrSell, optionsGuidelines, workboo
                     name: "guidelines.pdf",
                 }]
             });
-            session.beginDialog("confirmGuidelines");
+            session.endDialog()
+            //session.beginDialog("confirmGuidelines");
         }
     ]);
 
@@ -148,6 +153,22 @@ module.exports = (bot, builder, menuItems, buyOrSell, optionsGuidelines, workboo
                 session.send("Please contact the HR department or re-enter any question you answered incorrectly.");
                 session.beginDialog("conf");
             }
+        }
+    ]);
+
+    // Add a new transaction
+    bot.dialog("addNameAndPid", [
+        function(session) {
+            // Begin name dialog
+            session.beginDialog("promptReadGuidelines");
+        },
+        function(session) {
+            // Begin name dialog
+            session.beginDialog("userName");
+        },
+        function(session) {
+            // Begin SSN dialog
+            session.beginDialog("pid");
         }
     ]);
 
@@ -175,18 +196,6 @@ module.exports = (bot, builder, menuItems, buyOrSell, optionsGuidelines, workboo
                     session.send("Your information has been saved.")
                     session.beginDialog("continueOrExit");
                 });
-        }
-    ]);
-
-    // Add a new transaction
-    bot.dialog("addNameAndPid", [
-        function(session) {
-            // Begin name dialog
-            session.beginDialog("userName");
-        },
-        function(session) {
-            // Begin SSN dialog
-            session.beginDialog("pid");
         }
     ]);
 
@@ -275,7 +284,7 @@ module.exports = (bot, builder, menuItems, buyOrSell, optionsGuidelines, workboo
         function(session, args) {
             // If correct input
             if (args.response) {
-                session.beginDialog("confirmKnowingGuideLines")
+                session.beginDialog("confirmGuidelines")
             } else {
                 // Choose wrong entry.
                 session.beginDialog("changeAnswer");

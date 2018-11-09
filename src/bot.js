@@ -73,18 +73,6 @@ module.exports.setup = function(app) {
         }
     }
 
-    // The variables used to choose to read guidelines or not
-    var optionsGuidelines = {
-        "Yes, I would like to read them": {
-            // Dialog q1
-            item: "sendGuidelines"
-        },
-        "No, I know the guidelines": {
-            // Dialog q2
-            item: "confirmGuidelines"
-        }
-    };
-
     // Create the bot.
     var bot = new builder.UniversalBot(connector, [
         function(session) {
@@ -98,7 +86,7 @@ module.exports.setup = function(app) {
     ]).set('storage', inMemoryBotStorage); // Register in-memory storage
 
     // Load functions from bot dialogs
-    botDialogs(bot, builder, menuItems, buyOrSell, optionsGuidelines, workbook, filename, sheetname, excelFunctions);
+    botDialogs(bot, builder, menuItems, buyOrSell, workbook, filename, sheetname, excelFunctions);
 
     // Welcome message when chat starts
     bot.on('conversationUpdate', function(message) {
