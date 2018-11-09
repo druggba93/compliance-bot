@@ -12,16 +12,16 @@ module.exports = {
         row.getCell(9).value = "Number";
         row.getCell(10).value = "Transaction value";
     },
-    addRow: function(name, pid, transactionDate, type, security, isin, quotedPrice, numSecurities, row) {
+    addRow: function(row, dataArray) {
         row.getCell(1).value = new Date();
-        row.getCell(2).value = name;
-        row.getCell(3).value = pid;
-        row.getCell(4).value = security;
-        row.getCell(5).value = isin;
-        row.getCell(6).value = transactionDate;
-        row.getCell(7).value = type;
-        row.getCell(8).value = quotedPrice;
-        row.getCell(9).value = numSecurities;
-        row.getCell(10).value = quotedPrice.replace(',', '.') * numSecurities;
+        row.getCell(2).value = dataArray[0]; //name;
+        row.getCell(3).value = dataArray[1]; //pid;
+        row.getCell(4).value = dataArray[2]; // security;
+        row.getCell(5).value = dataArray[3]; // isin;
+        row.getCell(6).value = dataArray[4]; // transactionDate;
+        row.getCell(7).value = dataArray[5]; // type;
+        row.getCell(8).value = dataArray[6].replace('.', ','); // quotedPrice;
+        row.getCell(9).value = dataArray[7]; // numSecurities;
+        row.getCell(10).value = (dataArray[6].replace(',', '.') * dataArray[7]).replace('.', ','); // quotedPrice * numSecurities;
     }
 };

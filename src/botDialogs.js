@@ -179,14 +179,11 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
                 text: "Here you go. Read the guidelines below.",
                 attachments: [{
                     contentType: "application/pdf",
-                    //contentUrl: "C:/Users/oskar.drugge/Desktop/Internt projekt - ComplianceBot/guidelines.pdf",
-                    //contentUrl: "C:/Users/levi.sallberg/Desktop/Atom/bot/compliance-bot/src/guidelines.pdf",
                     contentUrl: __dirname + "\\guidelines.pdf",
                     name: "guidelines.pdf",
                 }]
             });
             session.endDialog()
-            //session.beginDialog("confirmGuidelines");
         }
     ]);
 
@@ -199,8 +196,8 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
             if (args.response) {
                 session.beginDialog("saveToExcel");
             } else {
-                session.send("Please contact the HR department or re-enter any question you answered incorrectly.");
-                session.beginDialog("conf");
+                session.send("Please contact the HR department. Have a great day!");
+                session.endConversation();
             }
         }
     ]);
@@ -208,7 +205,9 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
     // Add a new transaction
     bot.dialog("addNameAndPid", [
         function(session) {
-            // Begin name dialog
+            // Reset array with all transactions in current session
+            session.conversationData.dataArray = [];
+            // Prompt to read guidelines
             session.beginDialog("promptReadGuidelines");
         },
         function(session) {
@@ -226,24 +225,29 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
         function(session) {
             workbook.xlsx.readFile(filename)
                 .then(function() {
+                    // Try to open excel
                     var worksheet = workbook.getWorksheet(sheetname);
-                    var row = worksheet.getRow(worksheet.rowCount + 1);
-                    excelFunctions.addRow(session.conversationData.name, session.conversationData.pid, session.conversationData.transactionDate, session.conversationData.type, session.conversationData.security, session.conversationData.isin, session.conversationData.quotedPrice, session.conversationData.numSecurities, row);
-                    row.commit();
+                })
+                .catch(function(err) {
+                    // Catch file not found (+ other errors. Should be fixed)
+                    console.log("Missing excel file. Adding file!");
+                    var worksheet = workbook.addWorksheet(sheetname);
+                    excelFunctions.addHeaders(worksheet);
+                    workbook.xlsx.writeFile(filename)
                 })
                 .then(function() {
-                    return workbook.xlsx.writeFile(filename)
-                }).catch(function(err) {
-                    var worksheet = workbook.addWorksheet(sheetname);
-                    var row = worksheet.getRow(2);
-                    excelFunctions.addHeaders(worksheet);
-                    excelFunctions.addRow(session.conversationData.name, session.conversationData.pid, session.conversationData.transactionDate, session.conversationData.type, session.conversationData.security, session.conversationData.isin, session.conversationData.quotedPrice, session.conversationData.numSecurities, row);
-                    row.commit();
-                    workbook.xlsx.writeFile(filename)
-                    console.log("-------Error was: " + err);
-                }).then(function() {
-                    session.send("Your information has been saved.")
-                    session.beginDialog("continueOrExit");
+                    // Open excel and add row
+                    var worksheet = workbook.getWorksheet(sheetname);
+                    for (i = 0; i < session.conversationData.dataArray.length; i++){
+                        var row = worksheet.getRow(worksheet.rowCount + 1);
+                        excelFunctions.addRow(row, session.conversationData.dataArray[i]);
+                        row.commit();
+                        workbook.xlsx.writeFile(filename)
+                    }
+                })
+                .then(function() {
+                    session.send("Thank you. Have a great day!");
+                    session.endConversation();
                 });
         }
     ]);
@@ -290,8 +294,7 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
             if (args.response) {
                 session.beginDialog("addSecurity");
             } else {
-                session.send("Thank you. Have a great day!");
-                session.endConversation();
+                session.beginDialog("confirmGuidelines");
             }
         }
     ]);
@@ -333,7 +336,8 @@ module.exports = (bot, builder, menuItems, buyOrSell, workbook, filename, sheetn
         function(session, args) {
             // If correct input
             if (args.response) {
-                session.beginDialog("confirmGuidelines")
+                session.conversationData.dataArray.push([session.conversationData.name, session.conversationData.pid, session.conversationData.transactionDate, session.conversationData.type, session.conversationData.security, session.conversationData.isin, session.conversationData.quotedPrice, session.conversationData.numSecurities])
+                session.beginDialog("continueOrExit")
             } else {
                 // Choose wrong entry.
                 session.beginDialog("changeAnswer");
