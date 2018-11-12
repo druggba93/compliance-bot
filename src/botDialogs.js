@@ -219,6 +219,17 @@ module.exports = (bot, builder, menuItems, buyOrSell, workBook, fileName, sheetN
     // Confirm that user is following guidelines
     bot.dialog("confirmGuidelines", [
         function(session) {
+            builder.Prompts.confirm(session, "Would you like to read the guidelines again? Please answer 'yes' or 'no'.");
+        },
+        function(session, args, next) {
+            if (args.response) {
+                session.beginDialog("sendGuidelines");
+            } else {
+                session.send("Alright!");
+                next();
+            }
+        },
+        function(session) {
             builder.Prompts.confirm(session, "Does the transaction follow FCG guidelines? Please answer 'yes' or 'no'.");
         },
         function(session, args) {
