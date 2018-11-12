@@ -1,0 +1,18 @@
+{
+    "name": "test",
+    "description": "",
+    "services": [
+        {
+            "type": "endpoint",
+            "appId": "5b9435bf-3fc8-4020-9088-60177991dfe5",
+            "appPassword": "wxbeQXQT713iqkKRR66|]^+",
+            "endpoint": "http://localhost:3333/api/messages",
+            "id": "12ef7b30-e26c-11e8-80e7-0f99a2813f29",
+            "name": "http://localhost:3333/api/messages"
+        }
+    ],
+    "padlock": "",
+    "version": "2.0",
+    "overrides": null,
+    "path": "C:\\Users\\oskar.drugge\\Desktop\\Internt projekt - ComplianceBot\\compliance-bot\\test.bot"
+}

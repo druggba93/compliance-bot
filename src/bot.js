@@ -1,13 +1,24 @@
 'use strict';
 
-
-
+// Bot code
 module.exports.setup = function(app) {
+
+    // Required modules and functions
     var builder = require('botbuilder');
     var teams = require('botbuilder-teams');
     var config = require('config');
+    var excel = require('exceljs');
+    var excelFunctions = require('./excelFunctions');
+    var botDialogs = require('./botDialogs');
+    var validators = require('./validators');
+
+    // Setup excel file
+    var workBook = new excel.Workbook(); // Create a new instance of a Workbook class
+    const fileName = "transactions.xlsx"; // Name of excel-file
+    const sheetName = "Transactions"; // Sheetname
+
+    // Get bot info from config file
     var botConfig = config.get('bot');
-    // var BOT_APP_ID = process.env.MICROSOFT_APP_ID || botConfig.microsoftAppId;
 
     // Create a connector to handle the conversations
     var connector = new teams.TeamsChatConnector({
@@ -18,58 +29,81 @@ module.exports.setup = function(app) {
         appPassword: process.env.MICROSOFT_APP_PASSWORD || botConfig.microsoftAppPassword
     });
 
+    // We save information temporarily in the Bot storage memory
     var inMemoryBotStorage = new builder.MemoryBotStorage();
 
-    // Define a simple bot with the above connector that echoes what it received
-    // var bot = new builder.UniversalBot(connector, function(session) {
-    //     // Message might contain @mentions which we would like to strip off in the response
-    //     var text = teams.TeamsMessage.getTextWithoutMentions(session.message);
-    //     session.send('You said1: %s', text);
-    //     var text = teams.TeamsMessage.getTextWithoutMentions(session.message);
-    //     session.send('You said2: %s', text);
-    //     //session.send('You type: %s', teams.TeamsMessage.type)
-    //     session.send('You type: %s', teams.TeamsMessage.type)
-    //     session.send('You mess: %s', session.message[2])
-    //     if (session.type == session.message) {
-    //       session.send('Hey!')
-    //     }
-    // }).set('storage', inMemoryBotStorage);
+    // The variables used to choose the wrong entries
+    var menuItems = {
+        "Name": {
+            // User name
+            item: "userName"
+        },
+        "Personal identification number": {
+            // PID
+            item: "pid"
+        },
+        "Security": {
+            // Name of security
+            item: "security"
+        },
+        "Transaction date": {
+            // Transaction date
+            item: "transactionDate"
+        },
+        "Transaction type": {
+            // Transaction type
+            item: "type"
+        },
+        "Quoted price": {
+            // Quoted price
+            item: "quotedPrice"
+        },
+        "Number of securities": {
+            // Number of securities
+            item: "numSecurities"
+        }
+    };
 
-    // // My testing space
-    // var bot = new builder.UniversalBot(connector).set('storage', inMemoryBotStorage);
-    // bot.dialog('/', function(session) {
-    //   session.send("Skriv namn");
-    //   var name = teams.TeamsMessage.getTextWithoutMentions(session.message);
-    //   session.send("Är det korrekt?");
-    // });
+    // Variables used to choose type of transaction
+    var buyOrSell = {
+        "Buy": {
+            // Buy
+            item: "Buy"
+        },
+        "Sell": {
+            // Sell
+            item: "Sell"
+        }
+    };
 
-
-    // This is a dinner reservation bot that uses a waterfall technique to prompt users for input.
+    // Create the bot
     var bot = new builder.UniversalBot(connector, [
-        function (session) {
-            session.send("Registrera aktieaffärer.");
-            builder.Prompts.text(session, "Please provide your name");
+        function(session) {
+            // Register user name and personal identification number
+            session.beginDialog("addNameAndPid");
         },
-        function (session, results) {
-            session.dialogData.name = results.response;
-            builder.Prompts.text(session, "What is your social security number?");
-        },
-        function (session, results) {
-            session.dialogData.ssn = results.response;
-            builder.Prompts.text(session, "Which stock?");
-        },
-        function (session, results) {
-            session.dialogData.stock = results.response;
-            builder.Prompts.number(session, "Total value of transaction?");
-        },
-        function (session, results) {
-            session.dialogData.value = results.response;
-
-            // Process request and display reservation details
-            session.send(`Information saved. <br/>Name: ${session.dialogData.name} <br/>SSN: ${session.dialogData.ssn} <br/>Stock: ${session.dialogData.stock} <br/>Transaction value: ${session.dialogData.value}`);
-            session.endDialog();
+        function(session) {
+            // Add a security (e.g. a stock)
+            session.beginDialog("addSecurity")
         }
     ]).set('storage', inMemoryBotStorage); // Register in-memory storage
+
+    // Load functions from bot dialogs
+    botDialogs(bot, builder, menuItems, buyOrSell, workBook, fileName, sheetName, excelFunctions, validators);
+
+    // Welcome message when chat starts
+    bot.on('conversationUpdate', function(message) {
+        if (message.membersAdded) {
+            message.membersAdded.forEach(function(identity) {
+                if (identity.id === message.address.bot.id) {
+                    bot.send(new builder.Message()
+                        .address(message.address)
+                        .text("Hi, I am the compliance bot! Here you can register your financial transactions. Please type anything and then press enter to continue. \n\n If you would like to exit at any point, type 'exit' and press enter."));
+                }
+            });
+        }
+    });
+
     // Setup an endpoint on the router for the bot to listen.
     // NOTE: This endpoint cannot be changed and must be api/messages
     app.post('/api/messages', connector.listen());

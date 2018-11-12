@@ -60,3 +60,6 @@ typings/
 # Distributables
 dist/
 manifest/
+
+# Excel meta file
+src/~$transactions.xlsx
